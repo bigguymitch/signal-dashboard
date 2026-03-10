@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal — Ads Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: #F1F3F4;
+  color: #202124;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 256px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: #fff;
+  border-right: 1px solid #E0E0E0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-logo {
+  padding: 18px 20px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.logo-mark {
+  width: 30px;
+  height: 30px;
+  background: #1A73E8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark svg { display: block; }
+
+.logo-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #202124;
+  letter-spacing: -0.2px;
+}
+
+.sidebar-section {
+  padding: 14px 12px 6px;
+}
+
+.sidebar-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #9AA0A6;
+  padding: 0 8px;
+  margin-bottom: 6px;
+}
+
+.client-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: background 0.1s;
+  margin-bottom: 2px;
+}
+
+.client-row:hover { background: #F1F3F4; }
+.client-row.active { background: #E8F0FE; }
+.client-row.active .client-label { color: #1A73E8; font-weight: 600; }
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-green  { background: #34A853; }
+.dot-orange { background: #FBBC04; }
+.dot-red    { background: #EA4335; animation: blink 1.6s ease-in-out infinite; }
+
+@keyframes blink {
+  0%,100% { opacity:1; }
+  50% { opacity:0.4; }
+}
+
+.client-label {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #3C4043;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.client-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.tag-green  { background: #E6F4EA; color: #137333; }
+.tag-orange { background: #FEF7E0; color: #B06000; }
+.tag-red    { background: #FCE8E6; color: #C5221F; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid #F0F0F0;
+}
+
+.webhook-chip {
+  background: #F8F9FA;
+  border: 1px solid #DADCE0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.webhook-chip:hover { border-color: #1A73E8; }
+
+.webhook-chip-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9AA0A6;
+  margin-bottom: 4px;
+}
+
+.webhook-chip-url {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10.5px;
+  color: #1A73E8;
+  word-break: break-all;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid #E0E0E0;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar-title { font-size: 15px; font-weight: 500; color: #202124; }
+
+.live-dot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9AA0A6;
+}
+
+.live-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34A853;
+}
+
+/* ── MAIN ── */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* ── GREETING PANEL ── */
+.greeting-panel {
+  background: #fff;
+  border-bottom: 1px solid #E8EAED;
+  padding: 36px 36px 28px;
+}
+
+.greeting-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #9AA0A6;
+  margin-bottom: 10px;
+}
+
+.greeting-headline {
+  font-size: 26px;
+  font-weight: 400;
+  color: #202124;
+  line-height: 1.25;
+  margin-bottom: 12px;
+  letter-spacing: -0.3px;
+}
+
+.greeting-headline strong { font-weight: 600; }
+
+.greeting-body {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: #5F6368;
+  max-width: 580px;
+}
+
+.greeting-body b { color: #202124; font-weight: 600; }
+
+.alert-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.alert-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border: 1px solid;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+
+.alert-chip:hover { box-shadow: 0 1px 6px rgba(0,0,0,0.12); }
+.chip-red    { background: #FCE8E6; border-color: #F5C6C4; color: #C5221F; }
+.chip-orange { background: #FEF7E0; border-color: #FAE6A0; color: #B06000; }
+.chip-green  { background: #E6F4EA; border-color: #BBDFC7; color: #137333; }
+
+/* ── CLIENT CARDS HOME ── */
+.home-content { padding: 24px 36px; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9AA0A6;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #E8EAED;
+}
+
+/* ── REPORT CARDS ── */
+.card {
+  background: #fff;
+  border: 1px solid #E0E0E0;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  cursor: pointer;
+  gap: 14px;
+  user-select: none;
+  border-bottom: 1px solid transparent;
+  transition: background 0.1s;
+}
+
+.card-header:hover { background: #FAFAFA; }
+.card.open .card-header { border-bottom-color: #F0F0F0; }
+
+.card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.icon-green  { background: #E6F4EA; }
+.icon-orange { background: #FEF7E0; }
+.icon-red    { background: #FCE8E6; }
+
+.card-title { font-size: 14px; font-weight: 600; color: #202124; }
+.card-sub   { font-size: 12px; color: #9AA0A6; margin-top: 2px; font-family: monospace; }
+
+.card-chevron {
+  margin-left: auto;
+  color: #9AA0A6;
+  font-size: 18px;
+  transition: transform 0.2s;
+}
+
+.card.open .card-chevron { transform: rotate(180deg); }
+
+.card-body {
+  display: none;
+  padding: 24px;
+}
+
+.card.open .card-body { display: block; }
+
+.report-text {
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: #3C4043;
+}
+
+.report-text h1, .report-text h2, .report-text h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #202124;
+  margin: 18px 0 5px;
+}
+
+.report-text h1:first-child,
+.report-text h2:first-child { margin-top: 0; }
+
+.report-text strong { color: #202124; font-weight: 600; }
+
+.report-text ul {
+  padding-left: 18px;
+  margin: 6px 0 10px;
+}
+
+.report-text li { margin: 3px 0; }
+
+/* ── CONTEXT ── */
+.context-area {
+  display: none;
+  padding: 16px 20px;
+  background: #F8F9FA;
+  border-top: 1px solid #F0F0F0;
+}
+
+.card.open .context-area { display: block; }
+
+.context-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #9AA0A6;
+  margin-bottom: 10px;
+}
+
+.ctx-msg {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  animation: fadeIn 0.18s ease;
+}
+
+.ctx-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1A73E8;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ctx-bubble {
+  background: #fff;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  padding: 9px 13px;
+  font-size: 13px;
+  color: #202124;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.ctx-time {
+  font-size: 10px;
+  color: #9AA0A6;
+  margin-top: 3px;
+  font-family: monospace;
+}
+
+.reply-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.reply-input {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #DADCE0;
+  border-radius: 24px;
+  padding: 9px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #202124;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  resize: none;
+  line-height: 1.4;
+}
+
+.reply-input::placeholder { color: #9AA0A6; }
+.reply-input:focus {
+  border-color: #1A73E8;
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+}
+
+.reply-btn {
+  background: #1A73E8;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 9px 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  align-self: flex-end;
+  transition: background 0.12s;
+}
+
+.reply-btn:hover { background: #1557B0; }
+
+/* ── EMPTY ── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+  color: #9AA0A6;
+}
+
+.empty-icon {
+  font-size: 40px;
+  margin-bottom: 14px;
+  opacity: 0.5;
+}
+
+.empty-title { font-size: 15px; font-weight: 500; color: #5F6368; margin-bottom: 6px; }
+.empty-sub { font-size: 13px; color: #9AA0A6; max-width: 280px; line-height: 1.5; }
+
+/* ── SCROLL ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #DADCE0; border-radius: 4px; }
+
+/* ── CLIENT VIEWS ── */
+.reports-content { padding: 24px 36px; max-width: 840px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo" style="cursor:pointer" onclick="goHome()">
+      <div class="logo-mark">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8.5L6.5 12L13 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-name">Signal</span>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Clients</div>
+      <div id="client-list">
+        <div style="padding:6px 10px;color:#9AA0A6;font-size:12px">Loading...</div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="webhook-chip" onclick="copyWebhook()" title="Click to copy webhook URL">
+        <div class="webhook-chip-label">Webhook endpoint</div>
+        <div class="webhook-chip-url" id="webhook-url">Click to copy</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main" id="main">
+
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Signal</div>
+      <div class="live-dot">
+        <div class="live-indicator"></div>
+        Live
+      </div>
+    </div>
+
+    <!-- HOME VIEW -->
+    <div id="view-home">
+      <div class="greeting-panel">
+        <div class="greeting-eyebrow" id="g-time"></div>
+        <div class="greeting-headline" id="g-headline">Loading...</div>
+        <div class="greeting-body" id="g-body"></div>
+        <div class="alert-chips" id="g-chips"></div>
+      </div>
+      <div class="home-content">
+        <div class="section-label">All Clients</div>
+        <div id="home-cards"></div>
+      </div>
+    </div>
+
+    <!-- CLIENT VIEW -->
+    <div id="view-client" style="display:none">
+      <div class="reports-content">
+        <div class="section-label" id="client-heading">Reports</div>
+        <div id="reports-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const BASE = window.location.origin;
+let data = {};   // { clientName: [reports] }
+let activeClient = null;
+let pollTimer = null;
+
+// ── INIT ──
+document.getElementById('webhook-url').textContent = `${BASE}/api/report`;
+
+async function init() {
+  await seedIfEmpty();
+  await refresh();
+}
+
+async function refresh() {
+  try {
+    const res = await fetch(`${BASE}/api/clients`);
+    const clients = await res.json();
+    const fetches = clients.map(c =>
+      fetch(`${BASE}/api/reports/${encodeURIComponent(c)}`).then(r => r.json()).then(reps => [c, reps])
+    );
+    const results = await Promise.all(fetches);
+    results.forEach(([c, reps]) => data[c] = reps);
+    renderSidebar(clients);
+    if (!activeClient) renderHome(clients);
+    else renderReports(activeClient);
+  } catch(e) { console.error(e); }
+}
+
+// ── STATUS ──
+function status(reportText) {
+  if (!reportText) return 'green';
+  const t = reportText.toLowerCase();
+  if (['urgent','asap','critical','immediate','spike','hemorrhaging'].some(w => t.includes(w))) return 'red';
+  if (['concern','attention','decline','inflation','deterioration','increase'].some(w => t.includes(w))) return 'orange';
+  return 'green';
+}
+
+function statusLabel(s) {
+  return { green: 'Healthy', orange: 'Review', red: 'Action needed' }[s];
+}
+
+function statusEmoji(s) {
+  return { green: '✅', orange: '🟡', red: '🔴' }[s];
+}
+
+// ── SIDEBAR ──
+function renderSidebar(clients) {
+  const el = document.getElementById('client-list');
+  if (!clients.length) {
+    el.innerHTML = `<div style="padding:6px 10px;color:#9AA0A6;font-size:12px">No clients yet</div>`;
+    return;
+  }
+  el.innerHTML = clients.map(c => {
+    const reps = data[c] || [];
+    const s = reps.length ? status(reps[0].report_text) : 'green';
+    return `
+      <div class="client-row ${activeClient === c ? 'active' : ''}" onclick="selectClient('${esc(c)}')">
+        <div class="dot dot-${s}"></div>
+        <div class="client-label">${esc(c)}</div>
+        <div class="client-tag tag-${s}">${statusLabel(s)}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── HOME ──
+function renderHome(clients) {
+  document.getElementById('view-home').style.display = 'block';
+  document.getElementById('view-client').style.display = 'none';
+  document.getElementById('topbar-title').textContent = greeting();
+
+  // Time line
+  const now = new Date();
+  document.getElementById('g-time').textContent =
+    now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+    + ' · ' + now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+
+  document.getElementById('g-headline').innerHTML = `${greeting()}, <strong>Mitch</strong> 👋`;
+
+  // Categorise
+  const red    = clients.filter(c => { const r=data[c]||[]; return r.length && status(r[0].report_text)==='red'; });
+  const orange = clients.filter(c => { const r=data[c]||[]; return r.length && status(r[0].report_text)==='orange'; });
+  const green  = clients.filter(c => { const r=data[c]||[]; return r.length && status(r[0].report_text)==='green'; });
+
+  // Body message
+  let body = '';
+  if (!clients.length) {
+    body = `No clients connected yet. Your webhook is ready — connect Make.com to start receiving daily reports.`;
+  } else if (red.length) {
+    body = `Hope you're doing well. You need to take a look at <b>${red.join(', ')}</b> as soon as possible — there are issues that need your attention right now.`;
+    if (orange.length) body += ` There's also something minor to keep an eye on with <b>${orange.join(', ')}</b> when you get a moment.`;
+  } else if (orange.length) {
+    body = `Hope you're doing great. The ads are mostly looking good — the only thing to note (non-urgent) is <b>${orange.join(', ')}</b> ${orange.length === 1 ? 'has' : 'have'} a few metrics worth reviewing when you get a chance.`;
+  } else {
+    body = `Hope you're having a great day. All your accounts are looking healthy — no issues to flag, nothing urgent. Keep doing what you're doing. 🎉`;
+  }
+
+  document.getElementById('g-body').innerHTML = body;
+
+  // Chips
+  let chips = '';
+  if (red.length)    chips += `<div class="alert-chip chip-red" onclick="selectClient('${esc(red[0])}')"">🔴 ${red.length} account${red.length>1?'s':''} — act now</div>`;
+  if (orange.length) chips += `<div class="alert-chip chip-orange" onclick="selectClient('${esc(orange[0])}')">🟡 ${orange.length} to review</div>`;
+  if (green.length)  chips += `<div class="alert-chip chip-green">✅ ${green.length} healthy</div>`;
+  document.getElementById('g-chips').innerHTML = chips;
+
+  // Cards
+  const cardsEl = document.getElementById('home-cards');
+  if (!clients.length) {
+    cardsEl.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No clients yet</div><div class="empty-sub">Reports will appear here once Make sends them to your webhook.</div></div>`;
+    return;
+  }
+
+  cardsEl.innerHTML = clients.map(c => {
+    const reps = data[c] || [];
+    const s = reps.length ? status(reps[0].report_text) : 'green';
+    const preview = reps.length
+      ? reps[0].report_text.replace(/[#*_]/g,'').substring(0,130).trim() + '…'
+      : 'No reports yet.';
+    const dateStr = reps.length ? fmtDate(reps[0].created_at) : '—';
+    return `
+      <div class="card" onclick="selectClient('${esc(c)}')" style="cursor:pointer">
+        <div class="card-header" style="border-bottom:1px solid #F0F0F0">
+          <div class="card-icon icon-${s}">${statusEmoji(s)}</div>
+          <div>
+            <div class="card-title">${esc(c)}</div>
+            <div class="card-sub">${dateStr}</div>
+          </div>
+          <div class="client-tag tag-${s}" style="margin-left:auto">${statusLabel(s)}</div>
+        </div>
+        <div style="padding:12px 20px 14px;font-size:13px;color:#5F6368;line-height:1.55">${esc(preview)}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── CLIENT VIEW ──
+function selectClient(client) {
+  activeClient = client;
+  document.getElementById('view-home').style.display = 'none';
+  document.getElementById('view-client').style.display = 'block';
+  document.getElementById('topbar-title').textContent = client;
+  document.getElementById('client-heading').textContent = `Reports — ${client}`;
+  renderSidebar(Object.keys(data));
+  renderReports(client);
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(() => refresh(), 30000);
+}
+
+function goHome() {
+  activeClient = null;
+  document.getElementById('view-home').style.display = 'block';
+  document.getElementById('view-client').style.display = 'none';
+  document.getElementById('topbar-title').textContent = greeting();
+  renderSidebar(Object.keys(data));
+  renderHome(Object.keys(data));
+  if (pollTimer) clearInterval(pollTimer);
+}
+
+function renderReports(client) {
+  const reps = data[client] || [];
+  const el = document.getElementById('reports-list');
+  if (!reps.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">No reports yet</div><div class="empty-sub">Reports for ${esc(client)} will appear here.</div></div>`;
+    return;
+  }
+  el.innerHTML = reps.map((r, i) => {
+    const s = status(r.report_text);
+    return `
+      <div class="card ${i===0?'open':''}" id="card-${r.id}">
+        <div class="card-header" onclick="toggleCard(${r.id})">
+          <div class="card-icon icon-${s}">${statusEmoji(s)}</div>
+          <div>
+            <div class="card-title">${fmtDate(r.created_at)}</div>
+            <div class="card-sub">Generated ${fmtTime(r.created_at)}</div>
+          </div>
+          <div class="card-chevron">⌄</div>
+        </div>
+        <div class="card-body">
+          <div class="report-text">${parseMd(r.report_text)}</div>
+        </div>
+        <div class="context-area" id="ctx-${r.id}">
+          <div class="context-label">Your context &amp; notes</div>
+          <div id="msgs-${r.id}"></div>
+          <div class="reply-row">
+            <textarea class="reply-input" id="inp-${r.id}" rows="2"
+              placeholder="Add context: budget changes, bid adjustments, tracking issues…"
+              onkeydown="handleKey(event,${r.id})"></textarea>
+            <button class="reply-btn" onclick="sendReply(${r.id})">Save note</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  reps.forEach(r => loadMsgs(r.id));
+}
+
+function toggleCard(id) {
+  document.getElementById(`card-${id}`).classList.toggle('open');
+}
+
+async function loadMsgs(id) {
+  try {
+    const r = await fetch(`${BASE}/api/report/${id}`);
+    const d = await r.json();
+    const el = document.getElementById(`msgs-${id}`);
+    if (!el || !d.messages?.length) return;
+    el.innerHTML = d.messages.map(m => `
+      <div class="ctx-msg">
+        <div class="ctx-avatar">M</div>
+        <div>
+          <div class="ctx-bubble">${esc(m.message)}</div>
+          <div class="ctx-time">${fmtTime(m.created_at)}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+function handleKey(e, id) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(id); }
+}
+
+async function sendReply(id) {
+  const inp = document.getElementById(`inp-${id}`);
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  await fetch(`${BASE}/api/context`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ report_id: id, message: msg })
+  });
+  loadMsgs(id);
+}
+
+// ── UTILS ──
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+
+function fmtDate(dt) {
+  return new Date(dt).toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+function fmtTime(dt) {
+  return new Date(dt).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function parseMd(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+    .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>')
+    .replace(/(<li>.*?<\/li>\n?)+/gs, s => `<ul>${s}</ul>`)
+    .replace(/\n\n+/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+}
+
+function copyWebhook() {
+  navigator.clipboard.writeText(`${BASE}/api/report`);
+  const el = document.getElementById('webhook-url');
+  el.textContent = '✓ Copied!';
+  setTimeout(() => el.textContent = `${BASE}/api/report`, 2000);
+}
+
+// ── SEED DEMO DATA ──
+async function seedIfEmpty() {
+  try {
+    const r = await fetch(`${BASE}/api/clients`);
+    const clients = await r.json();
+    if (clients.length > 0) return;
+    await fetch(`${BASE}/api/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client: 'SoSo Swim',
+        report_text: `# SoSo Swim Weekly Performance Report\n**Week Ending 08/03/2026**\n\n## 1. ACCOUNT OVERVIEW\nPerformance remains stable with £704 spend (-0.3% WoW) and 40.7 conversions (-2.2% WoW). ROAS of 6.11 is healthy. CPA increased marginally to £17.29 (+2.0% WoW). UK Pmax driving account stability.\n\n## 2. CAMPAIGN ANALYSIS\n**Strong Performers:**\n- **UK Pmax**: £14.76 CPA (-17.6% WoW), 7.47 ROAS, driving 41% of conversions\n- **NA Pmax**: CPA dropped 39.2% to £18.09 despite 21.6% spend increase\n\n**Underperformers:**\n- **NZ/AU Pmax**: CPA spiked 38.6% to £66.30 with 1.24 ROAS — clear efficiency breakdown\n- **Branded Shopping**: Severe CPA deterioration across all geos (UK: +20.2%, NA: +136.9%, ANZ: +163.8%)\n\n## 3. CONCERNS\n- ANZ Pmax hemorrhaging efficiency — £66.30 CPA with 1.24 ROAS needs urgent review\n- Branded Shopping CPA explosion across all markets\n- Conversion rate tracking showing 0.00% — potential attribution issue\n\n## 4. POSITIVE SIGNALS\n- UK driving account with strong Pmax and branded volume\n- NA Pmax showing significant efficiency gains while scaling\n- UK Branded Shopping maintaining 25.3 ROAS\n\n## 5. ACTIONS\n1. **URGENT**: Audit ANZ Pmax — review targeting and bid strategy immediately\n2. Investigate conversion tracking — validate pixel implementation\n3. Audit branded shopping bid strategies across all geos\n4. Scale UK Pmax budget — reallocate spend from ANZ given 7.47 ROAS\n5. Analyse NA Pmax efficiency gains for replication in other markets`
+      })
+    });
+  } catch(e) {}
+}
+
+init();
+</script>
+</body>
+</html>
