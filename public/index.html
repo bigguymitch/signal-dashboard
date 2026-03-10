@@ -446,7 +446,7 @@ function renderReports(client) {
         <div class="card-body">
           <div class="report-toolbar">
             <button class="toolbar-btn" onclick="copyReport(${r.id})">📋 Copy report</button>
-            <button class="toolbar-btn" onclick="markResolved(${r.id})">✅ Mark resolved</button>
+            <button class="toolbar-btn" onclick="markResolved(${r.id})" style="${s==='resolved'?'display:none':''}">✅ Mark resolved</button>
           </div>
           <div class="report-text" id="text-${r.id}">${parseMd(r.report_text)}</div>
           <div class="status-history" id="history-${r.id}"></div>
@@ -595,8 +595,8 @@ function greeting() {
   const h = new Date().getHours();
   return h<12?'Good morning':h<17?'Good afternoon':'Good evening';
 }
-function fmtDate(dt) { return new Date(dt).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
-function fmtTime(dt) { return new Date(dt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDate(dt) { return new Date(dt).toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Australia/Sydney'}); }
+function fmtTime(dt) { return new Date(dt).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit',timeZone:'Australia/Sydney'}); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function parseMd(text) {
