@@ -7,502 +7,168 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-
-body {
-  font-family: 'Inter', -apple-system, sans-serif;
-  background: #F1F3F4;
-  color: #202124;
-  font-size: 14px;
-  -webkit-font-smoothing: antialiased;
-}
-
-.app {
-  display: grid;
-  grid-template-columns: 256px 1fr;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* ── SIDEBAR ── */
-.sidebar {
-  background: #fff;
-  border-right: 1px solid #E0E0E0;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.sidebar-logo {
-  padding: 18px 20px 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-bottom: 1px solid #F0F0F0;
-}
-
-.logo-mark {
-  width: 30px;
-  height: 30px;
-  background: #1A73E8;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.logo-mark svg { display: block; }
-
-.logo-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #202124;
-  letter-spacing: -0.2px;
-}
-
-.sidebar-section {
-  padding: 14px 12px 6px;
-}
-
-.sidebar-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: #9AA0A6;
-  padding: 0 8px;
-  margin-bottom: 6px;
-}
-
-.client-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 9px 10px;
-  border-radius: 24px;
-  cursor: pointer;
-  transition: background 0.1s;
-  margin-bottom: 2px;
-}
-
-.client-row:hover { background: #F1F3F4; }
-.client-row.active { background: #E8F0FE; }
-.client-row.active .client-label { color: #1A73E8; font-weight: 600; }
-
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.dot-green  { background: #34A853; }
-.dot-orange { background: #FBBC04; }
-.dot-red    { background: #EA4335; animation: blink 1.6s ease-in-out infinite; }
-
-@keyframes blink {
-  0%,100% { opacity:1; }
-  50% { opacity:0.4; }
-}
-
-.client-label {
-  flex: 1;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: #3C4043;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.client-tag {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 10px;
-}
-
-.tag-green  { background: #E6F4EA; color: #137333; }
-.tag-orange { background: #FEF7E0; color: #B06000; }
-.tag-red    { background: #FCE8E6; color: #C5221F; }
-
-.sidebar-footer {
-  margin-top: auto;
-  padding: 12px;
-  border-top: 1px solid #F0F0F0;
-}
-
-.webhook-chip {
-  background: #F8F9FA;
-  border: 1px solid #DADCE0;
-  border-radius: 8px;
-  padding: 10px 12px;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-
-.webhook-chip:hover { border-color: #1A73E8; }
-
-.webhook-chip-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #9AA0A6;
-  margin-bottom: 4px;
-}
-
-.webhook-chip-url {
-  font-family: 'Roboto Mono', monospace;
-  font-size: 10.5px;
-  color: #1A73E8;
-  word-break: break-all;
-}
-
-/* ── TOPBAR ── */
-.topbar {
-  background: #fff;
-  border-bottom: 1px solid #E0E0E0;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  padding: 0 28px;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.topbar-title { font-size: 15px; font-weight: 500; color: #202124; }
-
-.live-dot {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #9AA0A6;
-}
-
-.live-indicator {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #34A853;
-}
-
-/* ── MAIN ── */
-.main {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  height: 100vh;
-}
-
-/* ── GREETING PANEL ── */
-.greeting-panel {
-  background: #fff;
-  border-bottom: 1px solid #E8EAED;
-  padding: 36px 36px 28px;
-}
-
-.greeting-eyebrow {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #9AA0A6;
-  margin-bottom: 10px;
-}
-
-.greeting-headline {
-  font-size: 26px;
-  font-weight: 400;
-  color: #202124;
-  line-height: 1.25;
-  margin-bottom: 12px;
-  letter-spacing: -0.3px;
-}
-
-.greeting-headline strong { font-weight: 600; }
-
-.greeting-body {
-  font-size: 14.5px;
-  line-height: 1.65;
-  color: #5F6368;
-  max-width: 580px;
-}
-
-.greeting-body b { color: #202124; font-weight: 600; }
-
-.alert-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 18px;
-}
-
-.alert-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 100px;
-  font-size: 12.5px;
-  font-weight: 500;
-  border: 1px solid;
-  cursor: pointer;
-  transition: box-shadow 0.15s;
-}
-
-.alert-chip:hover { box-shadow: 0 1px 6px rgba(0,0,0,0.12); }
-.chip-red    { background: #FCE8E6; border-color: #F5C6C4; color: #C5221F; }
-.chip-orange { background: #FEF7E0; border-color: #FAE6A0; color: #B06000; }
-.chip-green  { background: #E6F4EA; border-color: #BBDFC7; color: #137333; }
-
-/* ── CLIENT CARDS HOME ── */
-.home-content { padding: 24px 36px; }
-
-.section-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #9AA0A6;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #E8EAED;
-}
-
-/* ── REPORT CARDS ── */
-.card {
-  background: #fff;
-  border: 1px solid #E0E0E0;
-  border-radius: 10px;
-  margin-bottom: 12px;
-  overflow: hidden;
-  transition: box-shadow 0.15s;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity:0; transform:translateY(6px); }
-  to   { opacity:1; transform:translateY(0); }
-}
-
-.card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-
-.card-header {
-  display: flex;
-  align-items: center;
-  padding: 16px 20px;
-  cursor: pointer;
-  gap: 14px;
-  user-select: none;
-  border-bottom: 1px solid transparent;
-  transition: background 0.1s;
-}
-
-.card-header:hover { background: #FAFAFA; }
-.card.open .card-header { border-bottom-color: #F0F0F0; }
-
-.card-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.icon-green  { background: #E6F4EA; }
-.icon-orange { background: #FEF7E0; }
-.icon-red    { background: #FCE8E6; }
-
-.card-title { font-size: 14px; font-weight: 600; color: #202124; }
-.card-sub   { font-size: 12px; color: #9AA0A6; margin-top: 2px; font-family: monospace; }
-
-.card-chevron {
-  margin-left: auto;
-  color: #9AA0A6;
-  font-size: 18px;
-  transition: transform 0.2s;
-}
-
-.card.open .card-chevron { transform: rotate(180deg); }
-
-.card-body {
-  display: none;
-  padding: 24px;
-}
-
-.card.open .card-body { display: block; }
-
-.report-text {
-  font-size: 13.5px;
-  line-height: 1.8;
-  color: #3C4043;
-}
-
-.report-text h1, .report-text h2, .report-text h3 {
-  font-size: 13px;
-  font-weight: 700;
-  color: #202124;
-  margin: 18px 0 5px;
-}
-
-.report-text h1:first-child,
-.report-text h2:first-child { margin-top: 0; }
-
-.report-text strong { color: #202124; font-weight: 600; }
-
-.report-text ul {
-  padding-left: 18px;
-  margin: 6px 0 10px;
-}
-
-.report-text li { margin: 3px 0; }
-
-/* ── CONTEXT ── */
-.context-area {
-  display: none;
-  padding: 16px 20px;
-  background: #F8F9FA;
-  border-top: 1px solid #F0F0F0;
-}
-
-.card.open .context-area { display: block; }
-
-.context-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: #9AA0A6;
-  margin-bottom: 10px;
-}
-
-.ctx-msg {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  animation: fadeIn 0.18s ease;
-}
-
-.ctx-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #1A73E8;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ctx-bubble {
-  background: #fff;
-  border: 1px solid #E0E0E0;
-  border-radius: 8px;
-  padding: 9px 13px;
-  font-size: 13px;
-  color: #202124;
-  line-height: 1.5;
-  flex: 1;
-}
-
-.ctx-time {
-  font-size: 10px;
-  color: #9AA0A6;
-  margin-top: 3px;
-  font-family: monospace;
-}
-
-.reply-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.reply-input {
-  flex: 1;
-  background: #fff;
-  border: 1px solid #DADCE0;
-  border-radius: 24px;
-  padding: 9px 16px;
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: #202124;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  resize: none;
-  line-height: 1.4;
-}
-
-.reply-input::placeholder { color: #9AA0A6; }
-.reply-input:focus {
-  border-color: #1A73E8;
-  box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
-}
-
-.reply-btn {
-  background: #1A73E8;
-  color: #fff;
-  border: none;
-  border-radius: 24px;
-  padding: 9px 20px;
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  align-self: flex-end;
-  transition: background 0.12s;
-}
-
-.reply-btn:hover { background: #1557B0; }
-
-/* ── EMPTY ── */
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 40px;
-  text-align: center;
-  color: #9AA0A6;
-}
-
-.empty-icon {
-  font-size: 40px;
-  margin-bottom: 14px;
-  opacity: 0.5;
-}
-
-.empty-title { font-size: 15px; font-weight: 500; color: #5F6368; margin-bottom: 6px; }
-.empty-sub { font-size: 13px; color: #9AA0A6; max-width: 280px; line-height: 1.5; }
-
-/* ── SCROLL ── */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #DADCE0; border-radius: 4px; }
-
-/* ── CLIENT VIEWS ── */
-.reports-content { padding: 24px 36px; max-width: 840px; }
+body { font-family:'Inter',-apple-system,sans-serif; background:#F1F3F4; color:#202124; font-size:14px; -webkit-font-smoothing:antialiased; }
+
+.app { display:grid; grid-template-columns:256px 1fr; height:100vh; overflow:hidden; }
+
+/* SIDEBAR */
+.sidebar { background:#fff; border-right:1px solid #E0E0E0; display:flex; flex-direction:column; overflow-y:auto; }
+.sidebar-logo { padding:18px 20px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #F0F0F0; cursor:pointer; }
+.logo-mark { width:30px; height:30px; background:#1A73E8; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.logo-name { font-size:16px; font-weight:600; color:#202124; letter-spacing:-0.2px; }
+.sidebar-section { padding:14px 12px 6px; }
+.sidebar-label { font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:#9AA0A6; padding:0 8px; margin-bottom:6px; }
+.client-row { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:24px; cursor:pointer; transition:background .1s; margin-bottom:2px; }
+.client-row:hover { background:#F1F3F4; }
+.client-row.active { background:#E8F0FE; }
+.client-row.active .client-label { color:#1A73E8; font-weight:600; }
+.dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.dot-green  { background:#34A853; }
+.dot-orange { background:#FBBC04; }
+.dot-red    { background:#EA4335; animation:blink 1.6s ease-in-out infinite; }
+.dot-blue   { background:#1A73E8; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+.client-label { flex:1; font-size:13.5px; font-weight:500; color:#3C4043; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.client-right { display:flex; align-items:center; gap:5px; }
+.client-tag { font-size:10px; font-weight:600; padding:2px 7px; border-radius:10px; }
+.tag-green  { background:#E6F4EA; color:#137333; }
+.tag-orange { background:#FEF7E0; color:#B06000; }
+.tag-red    { background:#FCE8E6; color:#C5221F; }
+.tag-blue   { background:#E8F0FE; color:#1A73E8; }
+.trend { font-size:12px; font-weight:600; }
+.trend-up   { color:#34A853; }
+.trend-down { color:#EA4335; }
+.trend-flat { color:#9AA0A6; }
+.sidebar-footer { margin-top:auto; padding:12px; border-top:1px solid #F0F0F0; }
+.webhook-chip { background:#F8F9FA; border:1px solid #DADCE0; border-radius:8px; padding:10px 12px; cursor:pointer; transition:border-color .15s; }
+.webhook-chip:hover { border-color:#1A73E8; }
+.webhook-chip-label { font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#9AA0A6; margin-bottom:4px; }
+.webhook-chip-url { font-family:monospace; font-size:10.5px; color:#1A73E8; word-break:break-all; }
+
+/* TOPBAR */
+.topbar { background:#fff; border-bottom:1px solid #E0E0E0; height:56px; display:flex; align-items:center; padding:0 28px; justify-content:space-between; position:sticky; top:0; z-index:10; }
+.topbar-title { font-size:15px; font-weight:500; color:#202124; }
+.live-dot { display:flex; align-items:center; gap:6px; font-size:12px; color:#9AA0A6; }
+.live-indicator { width:7px; height:7px; border-radius:50%; background:#34A853; }
+
+/* MAIN */
+.main { display:flex; flex-direction:column; overflow-y:auto; height:100vh; }
+
+/* GREETING */
+.greeting-panel { background:#fff; border-bottom:1px solid #E8EAED; padding:36px 36px 28px; }
+.greeting-eyebrow { font-size:11px; font-weight:500; letter-spacing:.05em; text-transform:uppercase; color:#9AA0A6; margin-bottom:10px; }
+.greeting-headline { font-size:26px; font-weight:400; color:#202124; line-height:1.25; margin-bottom:12px; letter-spacing:-.3px; }
+.greeting-headline strong { font-weight:600; }
+.greeting-body { font-size:14.5px; line-height:1.65; color:#5F6368; max-width:580px; }
+.greeting-body b { color:#202124; font-weight:600; }
+.alert-chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }
+.alert-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:100px; font-size:12.5px; font-weight:500; border:1px solid; cursor:pointer; transition:box-shadow .15s; }
+.alert-chip:hover { box-shadow:0 1px 6px rgba(0,0,0,.12); }
+.chip-red    { background:#FCE8E6; border-color:#F5C6C4; color:#C5221F; }
+.chip-orange { background:#FEF7E0; border-color:#FAE6A0; color:#B06000; }
+.chip-green  { background:#E6F4EA; border-color:#BBDFC7; color:#137333; }
+.chip-blue   { background:#E8F0FE; border-color:#C5D8F6; color:#1A73E8; }
+
+/* HOME CARDS */
+.home-content { padding:24px 36px; }
+.section-label { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#9AA0A6; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #E8EAED; }
+
+/* CARDS */
+.card { background:#fff; border:1px solid #E0E0E0; border-radius:10px; margin-bottom:12px; overflow:hidden; transition:box-shadow .15s; animation:fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.card:hover { box-shadow:0 2px 10px rgba(0,0,0,.08); }
+.card-header { display:flex; align-items:center; padding:16px 20px; cursor:pointer; gap:14px; user-select:none; border-bottom:1px solid transparent; transition:background .1s; }
+.card-header:hover { background:#FAFAFA; }
+.card.open .card-header { border-bottom-color:#F0F0F0; }
+.card-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.icon-green  { background:#E6F4EA; }
+.icon-orange { background:#FEF7E0; }
+.icon-red    { background:#FCE8E6; }
+.icon-blue   { background:#E8F0FE; }
+.card-title { font-size:14px; font-weight:600; color:#202124; }
+.card-sub   { font-size:12px; color:#9AA0A6; margin-top:2px; font-family:monospace; }
+.card-actions { display:flex; align-items:center; gap:8px; margin-left:auto; }
+.card-chevron { color:#9AA0A6; font-size:18px; transition:transform .2s; }
+.card.open .card-chevron { transform:rotate(180deg); }
+.btn-delete { background:none; border:none; cursor:pointer; color:#9AA0A6; font-size:16px; padding:4px 6px; border-radius:4px; transition:all .1s; line-height:1; }
+.btn-delete:hover { background:#FCE8E6; color:#EA4335; }
+.card-body { display:none; padding:24px; }
+.card.open .card-body { display:block; }
+
+/* REPORT TEXT */
+.report-text { font-size:13.5px; line-height:1.8; color:#3C4043; }
+.report-text h1,.report-text h2,.report-text h3 { font-size:13px; font-weight:700; color:#202124; margin:18px 0 5px; }
+.report-text h1:first-child,.report-text h2:first-child { margin-top:0; }
+.report-text strong { color:#202124; font-weight:600; }
+.report-text ul { padding-left:18px; margin:6px 0 10px; }
+.report-text li { margin:3px 0; }
+
+/* REPORT TOOLBAR */
+.report-toolbar { display:flex; gap:8px; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid #F0F0F0; }
+.toolbar-btn { display:flex; align-items:center; gap:5px; padding:5px 12px; border-radius:6px; font-size:12px; font-weight:500; border:1px solid #DADCE0; background:#fff; color:#5F6368; cursor:pointer; transition:all .12s; }
+.toolbar-btn:hover { background:#F1F3F4; border-color:#C0C4C9; color:#202124; }
+
+/* STATUS HISTORY */
+.status-history { margin-top:12px; }
+.history-item { display:flex; align-items:center; gap:8px; font-size:11.5px; color:#9AA0A6; margin-bottom:4px; }
+.history-badge { font-size:10px; font-weight:600; padding:1px 7px; border-radius:10px; }
+
+/* CONTEXT */
+.context-area { display:none; padding:16px 20px; background:#F8F9FA; border-top:1px solid #F0F0F0; }
+.card.open .context-area { display:block; }
+.context-label { font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:#9AA0A6; margin-bottom:10px; }
+.ctx-msg { display:flex; gap:10px; margin-bottom:10px; animation:fadeIn .18s ease; }
+.ctx-avatar { width:28px; height:28px; border-radius:50%; background:#1A73E8; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ctx-content { flex:1; }
+.ctx-bubble { background:#fff; border:1px solid #E0E0E0; border-radius:8px; padding:9px 13px; font-size:13px; color:#202124; line-height:1.5; display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.ctx-bubble.done-bubble { opacity:.6; text-decoration:line-through; }
+.ctx-text { flex:1; }
+.ctx-btns { display:flex; gap:4px; flex-shrink:0; }
+.ctx-btn { background:none; border:none; cursor:pointer; font-size:13px; padding:2px 4px; border-radius:4px; color:#9AA0A6; transition:all .1s; }
+.ctx-btn:hover { background:#F1F3F4; color:#202124; }
+.ctx-btn.done-btn.active { color:#34A853; }
+.ctx-time { font-size:10px; color:#9AA0A6; margin-top:3px; font-family:monospace; }
+.reply-row { display:flex; gap:8px; margin-top:10px; }
+.reply-input { flex:1; background:#fff; border:1px solid #DADCE0; border-radius:24px; padding:9px 16px; font-family:'Inter',sans-serif; font-size:13px; color:#202124; outline:none; transition:border-color .15s,box-shadow .15s; resize:none; line-height:1.4; }
+.reply-input::placeholder { color:#9AA0A6; }
+.reply-input:focus { border-color:#1A73E8; box-shadow:0 0 0 3px rgba(26,115,232,.12); }
+.reply-btn { background:#1A73E8; color:#fff; border:none; border-radius:24px; padding:9px 20px; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; align-self:flex-end; transition:background .12s; }
+.reply-btn:hover { background:#1557B0; }
+
+/* EMPTY */
+.empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 40px; text-align:center; }
+.empty-icon { font-size:40px; margin-bottom:14px; opacity:.5; }
+.empty-title { font-size:15px; font-weight:500; color:#5F6368; margin-bottom:6px; }
+.empty-sub { font-size:13px; color:#9AA0A6; max-width:280px; line-height:1.5; }
+
+/* CONFIRM DIALOG */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:100; align-items:center; justify-content:center; }
+.overlay.show { display:flex; }
+.dialog { background:#fff; border-radius:12px; padding:24px; max-width:340px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.15); }
+.dialog-title { font-size:15px; font-weight:600; margin-bottom:8px; }
+.dialog-body { font-size:13px; color:#5F6368; line-height:1.5; margin-bottom:20px; }
+.dialog-btns { display:flex; gap:8px; justify-content:flex-end; }
+.btn-cancel { padding:8px 16px; border-radius:6px; border:1px solid #DADCE0; background:#fff; font-size:13px; font-weight:500; cursor:pointer; color:#5F6368; }
+.btn-cancel:hover { background:#F1F3F4; }
+.btn-confirm-del { padding:8px 16px; border-radius:6px; border:none; background:#EA4335; color:#fff; font-size:13px; font-weight:600; cursor:pointer; }
+.btn-confirm-del:hover { background:#C5221F; }
+
+/* REPORTS CONTENT */
+.reports-content { padding:24px 36px; max-width:840px; }
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#DADCE0; border-radius:4px; }
+
+/* TOAST */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#202124; color:#fff; padding:10px 20px; border-radius:8px; font-size:13px; font-weight:500; z-index:200; transition:transform .3s; pointer-events:none; }
+.toast.show { transform:translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
 <div class="app">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="sidebar-logo" style="cursor:pointer" onclick="goHome()">
+    <div class="sidebar-logo" onclick="goHome()">
       <div class="logo-mark">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M3 8.5L6.5 12L13 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -510,34 +176,25 @@ body {
       </div>
       <span class="logo-name">Signal</span>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-label">Clients</div>
-      <div id="client-list">
-        <div style="padding:6px 10px;color:#9AA0A6;font-size:12px">Loading...</div>
-      </div>
+      <div id="client-list"><div style="padding:6px 10px;color:#9AA0A6;font-size:12px">Loading...</div></div>
     </div>
-
     <div class="sidebar-footer">
-      <div class="webhook-chip" onclick="copyWebhook()" title="Click to copy webhook URL">
+      <div class="webhook-chip" onclick="copyWebhook()">
         <div class="webhook-chip-label">Webhook endpoint</div>
         <div class="webhook-chip-url" id="webhook-url">Click to copy</div>
       </div>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="main" id="main">
-
     <div class="topbar">
       <div class="topbar-title" id="topbar-title">Signal</div>
-      <div class="live-dot">
-        <div class="live-indicator"></div>
-        Live
-      </div>
+      <div class="live-dot"><div class="live-indicator"></div>Live</div>
     </div>
 
-    <!-- HOME VIEW -->
+    <!-- HOME -->
     <div id="view-home">
       <div class="greeting-panel">
         <div class="greeting-eyebrow" id="g-time"></div>
@@ -558,17 +215,30 @@ body {
         <div id="reports-list"></div>
       </div>
     </div>
-
   </div>
 </div>
 
+<!-- DELETE CONFIRM DIALOG -->
+<div class="overlay" id="confirm-overlay">
+  <div class="dialog">
+    <div class="dialog-title" id="dialog-title">Delete report?</div>
+    <div class="dialog-body" id="dialog-body">This will permanently delete this report and all context notes. This cannot be undone.</div>
+    <div class="dialog-btns">
+      <button class="btn-cancel" onclick="closeDialog()">Cancel</button>
+      <button class="btn-confirm-del" id="dialog-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
 const BASE = window.location.origin;
-let data = {};   // { clientName: [reports] }
+let data = {};
 let activeClient = null;
 let pollTimer = null;
+let pendingDelete = null;
 
-// ── INIT ──
 document.getElementById('webhook-url').textContent = `${BASE}/api/report`;
 
 async function init() {
@@ -591,38 +261,71 @@ async function refresh() {
   } catch(e) { console.error(e); }
 }
 
-// ── STATUS ──
-function status(reportText) {
+// ── STATUS LOGIC ──
+function autoStatus(reportText) {
   if (!reportText) return 'green';
   const t = reportText.toLowerCase();
-  if (['urgent','asap','critical','immediate','spike','hemorrhaging'].some(w => t.includes(w))) return 'red';
-  if (['concern','attention','decline','inflation','deterioration','increase'].some(w => t.includes(w))) return 'orange';
+  if (['urgent','asap','critical','immediate','catastrophic','hemorrhaging','burning'].some(w => t.includes(w))) return 'red';
+  if (['concern','attention','decline','inflation','deterioration','spike','doubled'].some(w => t.includes(w))) return 'orange';
   return 'green';
 }
 
-function statusLabel(s) {
-  return { green: 'Healthy', orange: 'Review', red: 'Action needed' }[s];
+function resolvedStatus(report) {
+  if (report.status && report.status !== 'auto') return report.status;
+  return autoStatus(report.report_text);
 }
 
-function statusEmoji(s) {
-  return { green: '✅', orange: '🟡', red: '🔴' }[s];
+function statusConfig(s) {
+  return {
+    green:    { dot:'dot-green',  tag:'tag-green',  label:'Healthy',    emoji:'✅', icon:'icon-green'  },
+    orange:   { dot:'dot-orange', tag:'tag-orange', label:'Review',     emoji:'🟡', icon:'icon-orange' },
+    red:      { dot:'dot-red',    tag:'tag-red',    label:'Act now',    emoji:'🔴', icon:'icon-red'    },
+    actioned: { dot:'dot-blue',   tag:'tag-blue',   label:'Actioned',   emoji:'🔵', icon:'icon-blue'   },
+    resolved: { dot:'dot-green',  tag:'tag-green',  label:'Resolved',   emoji:'✅', icon:'icon-green'  },
+  }[s] || { dot:'dot-green', tag:'tag-green', label:'Healthy', emoji:'✅', icon:'icon-green' };
+}
+
+function clientStatus(client) {
+  const reps = data[client] || [];
+  if (!reps.length) return 'green';
+  return resolvedStatus(reps[0]);
+}
+
+// Trend: compare latest two reports' CPA mention
+function clientTrend(client) {
+  const reps = data[client] || [];
+  if (reps.length < 2) return 'flat';
+  const s1 = autoStatus(reps[0].report_text);
+  const s2 = autoStatus(reps[1].report_text);
+  const rank = { green:0, orange:1, red:2, actioned:1, resolved:0 };
+  const diff = (rank[s1]||0) - (rank[s2]||0);
+  if (diff < 0) return 'up';
+  if (diff > 0) return 'down';
+  return 'flat';
+}
+
+function trendHtml(trend) {
+  if (trend === 'up')   return `<span class="trend trend-up">↑</span>`;
+  if (trend === 'down') return `<span class="trend trend-down">↓</span>`;
+  return `<span class="trend trend-flat">→</span>`;
 }
 
 // ── SIDEBAR ──
 function renderSidebar(clients) {
   const el = document.getElementById('client-list');
-  if (!clients.length) {
-    el.innerHTML = `<div style="padding:6px 10px;color:#9AA0A6;font-size:12px">No clients yet</div>`;
-    return;
-  }
+  if (!clients.length) { el.innerHTML = `<div style="padding:6px 10px;color:#9AA0A6;font-size:12px">No clients yet</div>`; return; }
   el.innerHTML = clients.map(c => {
-    const reps = data[c] || [];
-    const s = reps.length ? status(reps[0].report_text) : 'green';
+    const s = clientStatus(c);
+    const cfg = statusConfig(s);
+    const trend = clientTrend(c);
     return `
-      <div class="client-row ${activeClient === c ? 'active' : ''}" onclick="selectClient('${esc(c)}')">
-        <div class="dot dot-${s}"></div>
+      <div class="client-row ${activeClient===c?'active':''}" onclick="selectClient('${esc(c)}')">
+        <div class="dot ${cfg.dot}"></div>
         <div class="client-label">${esc(c)}</div>
-        <div class="client-tag tag-${s}">${statusLabel(s)}</div>
+        <div class="client-right">
+          ${trendHtml(trend)}
+          <div class="client-tag ${cfg.tag}">${cfg.label}</div>
+        </div>
       </div>`;
   }).join('');
 }
@@ -632,65 +335,61 @@ function renderHome(clients) {
   document.getElementById('view-home').style.display = 'block';
   document.getElementById('view-client').style.display = 'none';
   document.getElementById('topbar-title').textContent = greeting();
-
-  // Time line
   const now = new Date();
   document.getElementById('g-time').textContent =
-    now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
-    + ' · ' + now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
-
+    now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+    + ' · ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   document.getElementById('g-headline').innerHTML = `${greeting()}, <strong>Mitch</strong> 👋`;
 
-  // Categorise
-  const red    = clients.filter(c => { const r=data[c]||[]; return r.length && status(r[0].report_text)==='red'; });
-  const orange = clients.filter(c => { const r=data[c]||[]; return r.length && status(r[0].report_text)==='orange'; });
-  const green  = clients.filter(c => { const r=data[c]||[]; return r.length && status(r[0].report_text)==='green'; });
+  const red      = clients.filter(c => clientStatus(c) === 'red');
+  const orange   = clients.filter(c => clientStatus(c) === 'orange');
+  const actioned = clients.filter(c => clientStatus(c) === 'actioned');
+  const healthy  = clients.filter(c => ['green','resolved'].includes(clientStatus(c)));
 
-  // Body message
   let body = '';
   if (!clients.length) {
     body = `No clients connected yet. Your webhook is ready — connect Make.com to start receiving daily reports.`;
   } else if (red.length) {
     body = `Hope you're doing well. You need to take a look at <b>${red.join(', ')}</b> as soon as possible — there are issues that need your attention right now.`;
-    if (orange.length) body += ` There's also something minor to keep an eye on with <b>${orange.join(', ')}</b> when you get a moment.`;
+    if (orange.length) body += ` There's also something worth reviewing with <b>${orange.join(', ')}</b> when you get a chance.`;
   } else if (orange.length) {
-    body = `Hope you're doing great. The ads are mostly looking good — the only thing to note (non-urgent) is <b>${orange.join(', ')}</b> ${orange.length === 1 ? 'has' : 'have'} a few metrics worth reviewing when you get a chance.`;
+    body = `Hope you're doing great. The ads are mostly looking good — the only thing to note (non-urgent) is <b>${orange.join(', ')}</b> ${orange.length===1?'has':'have'} a few metrics worth reviewing.`;
   } else {
     body = `Hope you're having a great day. All your accounts are looking healthy — no issues to flag, nothing urgent. Keep doing what you're doing. 🎉`;
   }
-
   document.getElementById('g-body').innerHTML = body;
 
-  // Chips
   let chips = '';
-  if (red.length)    chips += `<div class="alert-chip chip-red" onclick="selectClient('${esc(red[0])}')"">🔴 ${red.length} account${red.length>1?'s':''} — act now</div>`;
-  if (orange.length) chips += `<div class="alert-chip chip-orange" onclick="selectClient('${esc(orange[0])}')">🟡 ${orange.length} to review</div>`;
-  if (green.length)  chips += `<div class="alert-chip chip-green">✅ ${green.length} healthy</div>`;
+  if (red.length)      chips += `<div class="alert-chip chip-red" onclick="selectClient('${esc(red[0])}')"">🔴 ${red.length} — act now</div>`;
+  if (orange.length)   chips += `<div class="alert-chip chip-orange" onclick="selectClient('${esc(orange[0])}')">🟡 ${orange.length} to review</div>`;
+  if (actioned.length) chips += `<div class="alert-chip chip-blue">🔵 ${actioned.length} actioned</div>`;
+  if (healthy.length)  chips += `<div class="alert-chip chip-green">✅ ${healthy.length} healthy</div>`;
   document.getElementById('g-chips').innerHTML = chips;
 
-  // Cards
   const cardsEl = document.getElementById('home-cards');
   if (!clients.length) {
-    cardsEl.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No clients yet</div><div class="empty-sub">Reports will appear here once Make sends them to your webhook.</div></div>`;
+    cardsEl.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No clients yet</div><div class="empty-sub">Reports will appear here once Make sends them.</div></div>`;
     return;
   }
-
   cardsEl.innerHTML = clients.map(c => {
     const reps = data[c] || [];
-    const s = reps.length ? status(reps[0].report_text) : 'green';
-    const preview = reps.length
-      ? reps[0].report_text.replace(/[#*_]/g,'').substring(0,130).trim() + '…'
-      : 'No reports yet.';
+    const s = clientStatus(c);
+    const cfg = statusConfig(s);
+    const trend = clientTrend(c);
+    const preview = reps.length ? reps[0].report_text.replace(/[#*_\\n]/g,'').substring(0,130).trim()+'…' : 'No reports yet.';
     const dateStr = reps.length ? fmtDate(reps[0].created_at) : '—';
     return `
       <div class="card" onclick="selectClient('${esc(c)}')" style="cursor:pointer">
         <div class="card-header" style="border-bottom:1px solid #F0F0F0">
-          <div class="card-icon icon-${s}">${statusEmoji(s)}</div>
+          <div class="card-icon ${cfg.icon}">${cfg.emoji}</div>
           <div>
             <div class="card-title">${esc(c)}</div>
             <div class="card-sub">${dateStr}</div>
           </div>
-          <div class="client-tag tag-${s}" style="margin-left:auto">${statusLabel(s)}</div>
+          <div class="client-right" style="margin-left:auto;gap:8px">
+            ${trendHtml(trend)}
+            <div class="client-tag ${cfg.tag}">${cfg.label}</div>
+          </div>
         </div>
         <div style="padding:12px 20px 14px;font-size:13px;color:#5F6368;line-height:1.55">${esc(preview)}</div>
       </div>`;
@@ -707,7 +406,7 @@ function selectClient(client) {
   renderSidebar(Object.keys(data));
   renderReports(client);
   if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(() => refresh(), 30000);
+  pollTimer = setInterval(refresh, 30000);
 }
 
 function goHome() {
@@ -727,20 +426,30 @@ function renderReports(client) {
     el.innerHTML = `<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">No reports yet</div><div class="empty-sub">Reports for ${esc(client)} will appear here.</div></div>`;
     return;
   }
-  el.innerHTML = reps.map((r, i) => {
-    const s = status(r.report_text);
+  el.innerHTML = reps.map((r,i) => {
+    const s = resolvedStatus(r);
+    const cfg = statusConfig(s);
     return `
       <div class="card ${i===0?'open':''}" id="card-${r.id}">
         <div class="card-header" onclick="toggleCard(${r.id})">
-          <div class="card-icon icon-${s}">${statusEmoji(s)}</div>
+          <div class="card-icon ${cfg.icon}">${cfg.emoji}</div>
           <div>
             <div class="card-title">${fmtDate(r.created_at)}</div>
             <div class="card-sub">Generated ${fmtTime(r.created_at)}</div>
           </div>
-          <div class="card-chevron">⌄</div>
+          <div class="card-actions">
+            <div class="client-tag ${cfg.tag}">${cfg.label}</div>
+            <button class="btn-delete" onclick="confirmDeleteReport(event,${r.id})" title="Delete report">🗑</button>
+            <div class="card-chevron">⌄</div>
+          </div>
         </div>
         <div class="card-body">
-          <div class="report-text">${parseMd(r.report_text)}</div>
+          <div class="report-toolbar">
+            <button class="toolbar-btn" onclick="copyReport(${r.id})">📋 Copy report</button>
+            <button class="toolbar-btn" onclick="markResolved(${r.id})">✅ Mark resolved</button>
+          </div>
+          <div class="report-text" id="text-${r.id}">${parseMd(r.report_text)}</div>
+          <div class="status-history" id="history-${r.id}"></div>
         </div>
         <div class="context-area" id="ctx-${r.id}">
           <div class="context-label">Your context &amp; notes</div>
@@ -754,33 +463,59 @@ function renderReports(client) {
         </div>
       </div>`;
   }).join('');
-  reps.forEach(r => loadMsgs(r.id));
+  reps.forEach(r => loadDetail(r.id));
 }
 
-function toggleCard(id) {
-  document.getElementById(`card-${id}`).classList.toggle('open');
-}
+function toggleCard(id) { document.getElementById(`card-${id}`).classList.toggle('open'); }
 
-async function loadMsgs(id) {
+async function loadDetail(id) {
   try {
     const r = await fetch(`${BASE}/api/report/${id}`);
     const d = await r.json();
-    const el = document.getElementById(`msgs-${id}`);
-    if (!el || !d.messages?.length) return;
-    el.innerHTML = d.messages.map(m => `
-      <div class="ctx-msg">
-        <div class="ctx-avatar">M</div>
-        <div>
-          <div class="ctx-bubble">${esc(m.message)}</div>
-          <div class="ctx-time">${fmtTime(m.created_at)}</div>
-        </div>
-      </div>`).join('');
+    renderMsgs(id, d.messages || []);
+    renderHistory(id, d.history || []);
   } catch(e) {}
 }
 
-function handleKey(e, id) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(id); }
+function renderMsgs(id, messages) {
+  const el = document.getElementById(`msgs-${id}`);
+  if (!el) return;
+  if (!messages.length) { el.innerHTML = ''; return; }
+  el.innerHTML = messages.map(m => `
+    <div class="ctx-msg" id="msg-${m.id}">
+      <div class="ctx-avatar">M</div>
+      <div class="ctx-content">
+        <div class="ctx-bubble ${m.done?'done-bubble':''}">
+          <span class="ctx-text">${esc(m.message)}</span>
+          <div class="ctx-btns">
+            <button class="ctx-btn done-btn ${m.done?'active':''}" onclick="toggleDone(${m.id},${id})" title="${m.done?'Mark undone':'Mark done'}">✓</button>
+            <button class="ctx-btn" onclick="confirmDeleteNote(${m.id},${id})" title="Delete note">✕</button>
+          </div>
+        </div>
+        <div class="ctx-time">${fmtTime(m.created_at)}</div>
+      </div>
+    </div>`).join('');
 }
+
+function renderHistory(id, history) {
+  const el = document.getElementById(`history-${id}`);
+  if (!el || !history.length) return;
+  const cfg = statusConfig;
+  el.innerHTML = `<div style="margin-top:16px;padding-top:12px;border-top:1px solid #F0F0F0">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#9AA0A6;margin-bottom:8px">Status history</div>
+    ${history.map(h => {
+      const toCfg = statusConfig(h.to_status);
+      return `<div class="history-item">
+        <span class="history-badge ${toCfg.tag}">${toCfg.label}</span>
+        <span>${fmtTime(h.created_at)}</span>
+        ${h.reason ? `<span>— "${esc(h.reason.substring(0,60))}${h.reason.length>60?'…':''}"</span>` : ''}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── ACTIONS ──
+function handleKey(e, id) { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendReply(id);} }
 
 async function sendReply(id) {
   const inp = document.getElementById(`inp-${id}`);
@@ -788,32 +523,84 @@ async function sendReply(id) {
   if (!msg) return;
   inp.value = '';
   await fetch(`${BASE}/api/context`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ report_id: id, message: msg })
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({report_id:id, message:msg})
   });
-  loadMsgs(id);
+  // Refresh this report's data and re-render
+  await refresh();
+  showToast('Note saved — status updated to Actioned');
+}
+
+async function toggleDone(msgId, reportId) {
+  await fetch(`${BASE}/api/context/${msgId}/done`, { method:'PATCH' });
+  loadDetail(reportId);
+}
+
+async function confirmDeleteReport(e, id) {
+  e.stopPropagation();
+  pendingDelete = { type:'report', id };
+  document.getElementById('dialog-title').textContent = 'Delete report?';
+  document.getElementById('dialog-body').textContent = 'This will permanently delete this report and all context notes. This cannot be undone.';
+  document.getElementById('dialog-confirm').onclick = executeDelete;
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+
+function confirmDeleteNote(msgId, reportId) {
+  pendingDelete = { type:'note', id:msgId, reportId };
+  document.getElementById('dialog-title').textContent = 'Delete note?';
+  document.getElementById('dialog-body').textContent = 'This will permanently delete this context note.';
+  document.getElementById('dialog-confirm').onclick = executeDelete;
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+
+function closeDialog() {
+  document.getElementById('confirm-overlay').classList.remove('show');
+  pendingDelete = null;
+}
+
+async function executeDelete() {
+  closeDialog();
+  if (!pendingDelete) return;
+  if (pendingDelete.type === 'report') {
+    await fetch(`${BASE}/api/report/${pendingDelete.id}`, { method:'DELETE' });
+    await refresh();
+    showToast('Report deleted');
+  } else {
+    await fetch(`${BASE}/api/context/${pendingDelete.id}`, { method:'DELETE' });
+    loadDetail(pendingDelete.reportId);
+    showToast('Note deleted');
+  }
+}
+
+async function markResolved(id) {
+  await fetch(`${BASE}/api/report/${id}/status`, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ status:'resolved', reason:'Manually marked as resolved' })
+  });
+  await refresh();
+  showToast('Marked as resolved');
+}
+
+function copyReport(id) {
+  const el = document.getElementById(`text-${id}`);
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText);
+  showToast('Report copied to clipboard');
 }
 
 // ── UTILS ──
 function greeting() {
   const h = new Date().getHours();
-  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  return h<12?'Good morning':h<17?'Good afternoon':'Good evening';
 }
-
-function fmtDate(dt) {
-  return new Date(dt).toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-}
-
-function fmtTime(dt) {
-  return new Date(dt).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
-}
-
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function fmtDate(dt) { return new Date(dt).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function fmtTime(dt) { return new Date(dt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function parseMd(text) {
+  text = text.replace(/\\n/g, '\n');
   return text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/^### (.+)$/gm,'<h3>$1</h3>')
@@ -822,30 +609,39 @@ function parseMd(text) {
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/^- (.+)$/gm,'<li>$1</li>')
     .replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>')
-    .replace(/(<li>.*?<\/li>\n?)+/gs, s => `<ul>${s}</ul>`)
+    .replace(/(<li>.*?<\/li>\n?)+/gs, s=>`<ul>${s}</ul>`)
     .replace(/\n\n+/g,'</p><p>')
     .replace(/\n/g,'<br>');
 }
 
-function copyWebhook() {
-  navigator.clipboard.writeText(`${BASE}/api/report`);
-  const el = document.getElementById('webhook-url');
-  el.textContent = '✓ Copied!';
-  setTimeout(() => el.textContent = `${BASE}/api/report`, 2000);
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── SEED DEMO DATA ──
+function copyWebhook() {
+  navigator.clipboard.writeText(`${BASE}/api/report`);
+  showToast('Webhook URL copied');
+}
+
+// Close dialog on overlay click
+document.getElementById('confirm-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeDialog();
+});
+
 async function seedIfEmpty() {
   try {
     const r = await fetch(`${BASE}/api/clients`);
     const clients = await r.json();
     if (clients.length > 0) return;
     await fetch(`${BASE}/api/report`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client: 'SoSo Swim',
-        report_text: `# SoSo Swim Weekly Performance Report\n**Week Ending 08/03/2026**\n\n## 1. ACCOUNT OVERVIEW\nPerformance remains stable with £704 spend (-0.3% WoW) and 40.7 conversions (-2.2% WoW). ROAS of 6.11 is healthy. CPA increased marginally to £17.29 (+2.0% WoW). UK Pmax driving account stability.\n\n## 2. CAMPAIGN ANALYSIS\n**Strong Performers:**\n- **UK Pmax**: £14.76 CPA (-17.6% WoW), 7.47 ROAS, driving 41% of conversions\n- **NA Pmax**: CPA dropped 39.2% to £18.09 despite 21.6% spend increase\n\n**Underperformers:**\n- **NZ/AU Pmax**: CPA spiked 38.6% to £66.30 with 1.24 ROAS — clear efficiency breakdown\n- **Branded Shopping**: Severe CPA deterioration across all geos (UK: +20.2%, NA: +136.9%, ANZ: +163.8%)\n\n## 3. CONCERNS\n- ANZ Pmax hemorrhaging efficiency — £66.30 CPA with 1.24 ROAS needs urgent review\n- Branded Shopping CPA explosion across all markets\n- Conversion rate tracking showing 0.00% — potential attribution issue\n\n## 4. POSITIVE SIGNALS\n- UK driving account with strong Pmax and branded volume\n- NA Pmax showing significant efficiency gains while scaling\n- UK Branded Shopping maintaining 25.3 ROAS\n\n## 5. ACTIONS\n1. **URGENT**: Audit ANZ Pmax — review targeting and bid strategy immediately\n2. Investigate conversion tracking — validate pixel implementation\n3. Audit branded shopping bid strategies across all geos\n4. Scale UK Pmax budget — reallocate spend from ANZ given 7.47 ROAS\n5. Analyse NA Pmax efficiency gains for replication in other markets`
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        client:'SoSo Swim',
+        report_text:`# SoSo Swim Weekly Performance Report\n**Week Ending 08/03/2026**\n\n## 1. ACCOUNT OVERVIEW\nPerformance remains stable with £704 spend (-0.3% WoW) and 40.7 conversions (-2.2% WoW). ROAS of 6.11 is healthy. CPA increased marginally to £17.29 (+2.0% WoW). UK Pmax driving account stability.\n\n## 2. CAMPAIGN ANALYSIS\n**Strong Performers:**\n- **UK Pmax**: £14.76 CPA (-17.6% WoW), 7.47 ROAS, driving 41% of conversions\n- **NA Pmax**: CPA dropped 39.2% to £18.09 despite 21.6% spend increase\n\n**Underperformers:**\n- **NZ/AU Pmax**: CPA spiked 38.6% to £66.30 with 1.24 ROAS — clear efficiency breakdown\n- **Branded Shopping**: Severe CPA deterioration across all geos\n\n## 3. CONCERNS\n- ANZ Pmax hemorrhaging efficiency — urgent review needed\n- Branded Shopping CPA explosion across all markets\n\n## 4. POSITIVE SIGNALS\n- UK driving account with strong Pmax and branded volume\n- NA Pmax showing significant efficiency gains while scaling\n\n## 5. ACTIONS\n1. **URGENT**: Audit ANZ Pmax — review targeting and bid strategy immediately\n2. Investigate conversion tracking — validate pixel implementation\n3. Audit branded shopping bid strategies across all geos\n4. Scale UK Pmax budget — reallocate spend from ANZ given 7.47 ROAS`
       })
     });
   } catch(e) {}
