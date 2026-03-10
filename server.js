@@ -6,11 +6,11 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+app.use(express.text({ limit: '10mb', type: '*/*' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const db = new Database('./reports.db');
 
-// Init tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,16 +27,30 @@ db.exec(`
   );
 `);
 
-// POST /report — Make.com sends reports here
 app.post('/api/report', (req, res) => {
-  const { client, report_text } = req.body;
+  let client, report_text;
+
+  if (typeof req.body === 'string') {
+    client = req.headers['x-client-name'] || 'Unknown';
+    report_text = req.body;
+  } else {
+    client = req.body.client;
+    report_text = req.body.report_text;
+  }
+
   if (!client || !report_text) return res.status(400).json({ error: 'Missing fields' });
+
+  // Decode URL encoding (from Make's encodeURL function)
+  try { report_text = decodeURIComponent(report_text); } catch(e) {}
+
+  // Clean escaped newlines
+  report_text = report_text.replace(/\\n/g, '\n');
+
   const stmt = db.prepare('INSERT INTO reports (client, report_text) VALUES (?, ?)');
   const result = stmt.run(client, report_text);
   res.json({ id: result.lastInsertRowid });
 });
 
-// GET /reports — list all reports for a client
 app.get('/api/reports/:client', (req, res) => {
   const reports = db.prepare(`
     SELECT r.*, 
@@ -49,7 +63,6 @@ app.get('/api/reports/:client', (req, res) => {
   res.json(reports);
 });
 
-// GET /report/:id — get single report with context
 app.get('/api/report/:id', (req, res) => {
   const report = db.prepare('SELECT * FROM reports WHERE id = ?').get(req.params.id);
   if (!report) return res.status(404).json({ error: 'Not found' });
@@ -57,7 +70,6 @@ app.get('/api/report/:id', (req, res) => {
   res.json({ ...report, messages });
 });
 
-// POST /context — add context reply to a report
 app.post('/api/context', (req, res) => {
   const { report_id, message } = req.body;
   if (!report_id || !message) return res.status(400).json({ error: 'Missing fields' });
@@ -66,7 +78,6 @@ app.post('/api/context', (req, res) => {
   res.json({ id: result.lastInsertRowid });
 });
 
-// GET /clients — list all clients
 app.get('/api/clients', (req, res) => {
   const clients = db.prepare('SELECT DISTINCT client FROM reports ORDER BY client').all();
   res.json(clients.map(r => r.client));
