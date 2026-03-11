@@ -237,6 +237,7 @@ const BASE = window.location.origin;
 let data = {};
 let activeClient = null;
 let pollTimer = null;
+let typing = false;
 let pendingDelete = null;
 
 document.getElementById('webhook-url').textContent = `${BASE}/api/report`;
@@ -406,7 +407,7 @@ function selectClient(client) {
   renderSidebar(Object.keys(data));
   renderReports(client);
   if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(refresh, 30000);
+  pollTimer = setInterval(() => { if (!typing) refresh(); }, 30000);
 }
 
 function goHome() {
@@ -457,7 +458,7 @@ function renderReports(client) {
           <div class="reply-row">
             <textarea class="reply-input" id="inp-${r.id}" rows="2"
               placeholder="Add context: budget changes, bid adjustments, tracking issues…"
-              onkeydown="handleKey(event,${r.id})"></textarea>
+              onkeydown="handleKey(event,${r.id})" onfocus="typing=true" onblur="typing=false"></textarea>
             <button class="reply-btn" onclick="sendReply(${r.id})">Save note</button>
           </div>
         </div>
