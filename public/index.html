@@ -561,15 +561,16 @@ function closeDialog() {
 }
 
 async function executeDelete() {
-  closeDialog();
   if (!pendingDelete) return;
-  if (pendingDelete.type === 'report') {
-    await fetch(`${BASE}/api/report/${pendingDelete.id}`, { method:'DELETE' });
+  const del = pendingDelete;
+  closeDialog();
+  if (del.type === 'report') {
+    await fetch(`${BASE}/api/report/${del.id}`, { method:'DELETE' });
     await refresh();
     showToast('Report deleted');
   } else {
-    await fetch(`${BASE}/api/context/${pendingDelete.id}`, { method:'DELETE' });
-    loadDetail(pendingDelete.reportId);
+    await fetch(`${BASE}/api/context/${del.id}`, { method:'DELETE' });
+    loadDetail(del.reportId);
     showToast('Note deleted');
   }
 }
