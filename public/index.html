@@ -266,8 +266,8 @@ async function refresh() {
 function autoStatus(reportText) {
   if (!reportText) return 'green';
   const t = reportText.toLowerCase();
-  if (['urgent','asap','critical','immediate','catastrophic','hemorrhaging','burning'].some(w => t.includes(w))) return 'red';
-  if (['concern','attention','decline','inflation','deterioration','spike','doubled'].some(w => t.includes(w))) return 'orange';
+  if (['urgent','asap','immediate action','critical issue','hemorrhaging','burning budget','sub-1.0 roas','0.9 roas','paused immediately'].some(w => t.includes(w))) return 'red';
+  if (['concern','attention','cpa inflation','efficiency decline','deterioration','significant spike','budget waste'].some(w => t.includes(w))) return 'orange';
   return 'green';
 }
 
