@@ -123,3 +123,28 @@ app.get('/api/clients', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// GET /api/memory/:client — recent notes and summaries for Claude
+app.get('/api/memory/:client', (req, res) => {
+  const client = decodeURIComponent(req.params.client);
+  const reports = db.prepare(`
+    SELECT r.id, r.report_text, r.created_at, r.status
+    FROM reports r WHERE r.client = ?
+    ORDER BY r.created_at DESC LIMIT 4
+  `).all(client);
+
+  let text = '';
+  reports.forEach((r, i) => {
+    const d = new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    const notes = db.prepare('SELECT message, done FROM context_messages WHERE report_id = ? ORDER BY created_at ASC').all(r.id);
+    text += `--- Previous Report ${i + 1}: ${d} ---\n`;
+    text += r.report_text.substring(0, 600) + '...\n';
+    if (notes.length) {
+      text += `Account manager notes:\n`;
+      notes.forEach(n => { text += `- ${n.done ? '[RESOLVED] ' : ''}${n.message}\n`; });
+    }
+    text += '\n';
+  });
+
+  res.json({ text: text || 'No previous reports available.' });
+});
