@@ -59,6 +59,28 @@ app.post('/api/report', (req, res) => {
   res.json({ id: result.lastInsertRowid });
 });
 
+// Returns latest report per client for the dashboard — sorted flagged first
+app.get('/api/reports', (req, res) => {
+  const reports = db.prepare(`
+    SELECT r.*
+    FROM reports r
+    INNER JOIN (
+      SELECT client, MAX(created_at) as max_created
+      FROM reports
+      GROUP BY client
+    ) latest ON r.client = latest.client AND r.created_at = latest.max_created
+    ORDER BY
+      CASE r.status
+        WHEN 'flagged' THEN 0
+        WHEN 'auto' THEN 1
+        WHEN 'actioned' THEN 2
+        ELSE 1
+      END,
+      r.created_at DESC
+  `).all();
+  res.json(reports);
+});
+
 app.get('/api/reports/:client', (req, res) => {
   const reports = db.prepare(`
     SELECT r.*, (SELECT COUNT(*) FROM context_messages WHERE report_id = r.id) as reply_count
@@ -103,7 +125,7 @@ app.patch('/api/context/:id/done', (req, res) => {
   const msg = db.prepare('SELECT * FROM context_messages WHERE id = ?').get(req.params.id);
   if (!msg) return res.status(404).json({ error: 'Not found' });
   const newDone = msg.done ? 0 : 1;
-  db.prepare('UPDATE context_messages SET done = ? WHERE id = ?').run(newDone, req.params.id);
+  db.prepare('UPDATE context_messages SET done = ? WHERE id = ?').run(newDone, msg.id);
   res.json({ done: newDone });
 });
 
