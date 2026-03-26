@@ -1,655 +1,513 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal — Ads Intelligence</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Signal | Client Performance Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#007BFF",
+          "surface": "#FFFFFF",
+          "background": "#F8FAFC",
+          "outline": "#E2E8F0",
+          "on-surface": "#0F172A",
+          "error": "#DC2626",
+          "success": "#10B981"
+        },
+        fontFamily: {
+          "headline": ["Manrope", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+          "body": ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        },
+        borderRadius: {
+          "DEFAULT": "0.5rem",
+          "lg": "0.75rem",
+          "xl": "1rem",
+          "full": "9999px"
+        },
+      },
+    },
+  }
+</script>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Inter',-apple-system,sans-serif; background:#F1F3F4; color:#202124; font-size:14px; -webkit-font-smoothing:antialiased; }
-
-.app { display:grid; grid-template-columns:256px 1fr; height:100vh; overflow:hidden; }
-
-/* SIDEBAR */
-.sidebar { background:#fff; border-right:1px solid #E0E0E0; display:flex; flex-direction:column; overflow-y:auto; }
-.sidebar-logo { padding:18px 20px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #F0F0F0; cursor:pointer; }
-.logo-mark { width:30px; height:30px; background:#1A73E8; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.logo-name { font-size:16px; font-weight:600; color:#202124; letter-spacing:-0.2px; }
-.sidebar-section { padding:14px 12px 6px; }
-.sidebar-label { font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:#9AA0A6; padding:0 8px; margin-bottom:6px; }
-.client-row { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:24px; cursor:pointer; transition:background .1s; margin-bottom:2px; }
-.client-row:hover { background:#F1F3F4; }
-.client-row.active { background:#E8F0FE; }
-.client-row.active .client-label { color:#1A73E8; font-weight:600; }
-.dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-.dot-green  { background:#34A853; }
-.dot-orange { background:#FBBC04; }
-.dot-red    { background:#EA4335; animation:blink 1.6s ease-in-out infinite; }
-.dot-blue   { background:#1A73E8; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
-.client-label { flex:1; font-size:13.5px; font-weight:500; color:#3C4043; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.client-right { display:flex; align-items:center; gap:5px; }
-.client-tag { font-size:10px; font-weight:600; padding:2px 7px; border-radius:10px; }
-.tag-green  { background:#E6F4EA; color:#137333; }
-.tag-orange { background:#FEF7E0; color:#B06000; }
-.tag-red    { background:#FCE8E6; color:#C5221F; }
-.tag-blue   { background:#E8F0FE; color:#1A73E8; }
-.trend { font-size:12px; font-weight:600; }
-.trend-up   { color:#34A853; }
-.trend-down { color:#EA4335; }
-.trend-flat { color:#9AA0A6; }
-.sidebar-footer { margin-top:auto; padding:12px; border-top:1px solid #F0F0F0; }
-.webhook-chip { background:#F8F9FA; border:1px solid #DADCE0; border-radius:8px; padding:10px 12px; cursor:pointer; transition:border-color .15s; }
-.webhook-chip:hover { border-color:#1A73E8; }
-.webhook-chip-label { font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#9AA0A6; margin-bottom:4px; }
-.webhook-chip-url { font-family:monospace; font-size:10.5px; color:#1A73E8; word-break:break-all; }
-
-/* TOPBAR */
-.topbar { background:#fff; border-bottom:1px solid #E0E0E0; height:56px; display:flex; align-items:center; padding:0 28px; justify-content:space-between; position:sticky; top:0; z-index:10; }
-.topbar-title { font-size:15px; font-weight:500; color:#202124; }
-.live-dot { display:flex; align-items:center; gap:6px; font-size:12px; color:#9AA0A6; }
-.live-indicator { width:7px; height:7px; border-radius:50%; background:#34A853; }
-
-/* MAIN */
-.main { display:flex; flex-direction:column; overflow-y:auto; height:100vh; }
-
-/* GREETING */
-.greeting-panel { background:#fff; border-bottom:1px solid #E8EAED; padding:36px 36px 28px; }
-.greeting-eyebrow { font-size:11px; font-weight:500; letter-spacing:.05em; text-transform:uppercase; color:#9AA0A6; margin-bottom:10px; }
-.greeting-headline { font-size:26px; font-weight:400; color:#202124; line-height:1.25; margin-bottom:12px; letter-spacing:-.3px; }
-.greeting-headline strong { font-weight:600; }
-.greeting-body { font-size:14.5px; line-height:1.65; color:#5F6368; max-width:580px; }
-.greeting-body b { color:#202124; font-weight:600; }
-.alert-chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }
-.alert-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:100px; font-size:12.5px; font-weight:500; border:1px solid; cursor:pointer; transition:box-shadow .15s; }
-.alert-chip:hover { box-shadow:0 1px 6px rgba(0,0,0,.12); }
-.chip-red    { background:#FCE8E6; border-color:#F5C6C4; color:#C5221F; }
-.chip-orange { background:#FEF7E0; border-color:#FAE6A0; color:#B06000; }
-.chip-green  { background:#E6F4EA; border-color:#BBDFC7; color:#137333; }
-.chip-blue   { background:#E8F0FE; border-color:#C5D8F6; color:#1A73E8; }
-
-/* HOME CARDS */
-.home-content { padding:24px 36px; }
-.section-label { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#9AA0A6; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #E8EAED; }
-
-/* CARDS */
-.card { background:#fff; border:1px solid #E0E0E0; border-radius:10px; margin-bottom:12px; overflow:hidden; transition:box-shadow .15s; animation:fadeIn .2s ease; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-.card:hover { box-shadow:0 2px 10px rgba(0,0,0,.08); }
-.card-header { display:flex; align-items:center; padding:16px 20px; cursor:pointer; gap:14px; user-select:none; border-bottom:1px solid transparent; transition:background .1s; }
-.card-header:hover { background:#FAFAFA; }
-.card.open .card-header { border-bottom-color:#F0F0F0; }
-.card-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
-.icon-green  { background:#E6F4EA; }
-.icon-orange { background:#FEF7E0; }
-.icon-red    { background:#FCE8E6; }
-.icon-blue   { background:#E8F0FE; }
-.card-title { font-size:14px; font-weight:600; color:#202124; }
-.card-sub   { font-size:12px; color:#9AA0A6; margin-top:2px; font-family:monospace; }
-.card-actions { display:flex; align-items:center; gap:8px; margin-left:auto; }
-.card-chevron { color:#9AA0A6; font-size:18px; transition:transform .2s; }
-.card.open .card-chevron { transform:rotate(180deg); }
-.btn-delete { background:none; border:none; cursor:pointer; color:#9AA0A6; font-size:16px; padding:4px 6px; border-radius:4px; transition:all .1s; line-height:1; }
-.btn-delete:hover { background:#FCE8E6; color:#EA4335; }
-.card-body { display:none; padding:24px; }
-.card.open .card-body { display:block; }
-
-/* REPORT TEXT */
-.report-text { font-size:13.5px; line-height:1.8; color:#3C4043; }
-.report-text h1,.report-text h2,.report-text h3 { font-size:13px; font-weight:700; color:#202124; margin:18px 0 5px; }
-.report-text h1:first-child,.report-text h2:first-child { margin-top:0; }
-.report-text strong { color:#202124; font-weight:600; }
-.report-text ul { padding-left:18px; margin:6px 0 10px; }
-.report-text li { margin:3px 0; }
-
-/* REPORT TOOLBAR */
-.report-toolbar { display:flex; gap:8px; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid #F0F0F0; }
-.toolbar-btn { display:flex; align-items:center; gap:5px; padding:5px 12px; border-radius:6px; font-size:12px; font-weight:500; border:1px solid #DADCE0; background:#fff; color:#5F6368; cursor:pointer; transition:all .12s; }
-.toolbar-btn:hover { background:#F1F3F4; border-color:#C0C4C9; color:#202124; }
-
-/* STATUS HISTORY */
-.status-history { margin-top:12px; }
-.history-item { display:flex; align-items:center; gap:8px; font-size:11.5px; color:#9AA0A6; margin-bottom:4px; }
-.history-badge { font-size:10px; font-weight:600; padding:1px 7px; border-radius:10px; }
-
-/* CONTEXT */
-.context-area { display:none; padding:16px 20px; background:#F8F9FA; border-top:1px solid #F0F0F0; }
-.card.open .context-area { display:block; }
-.context-label { font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:#9AA0A6; margin-bottom:10px; }
-.ctx-msg { display:flex; gap:10px; margin-bottom:10px; animation:fadeIn .18s ease; }
-.ctx-avatar { width:28px; height:28px; border-radius:50%; background:#1A73E8; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.ctx-content { flex:1; }
-.ctx-bubble { background:#fff; border:1px solid #E0E0E0; border-radius:8px; padding:9px 13px; font-size:13px; color:#202124; line-height:1.5; display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
-.ctx-bubble.done-bubble { opacity:.6; text-decoration:line-through; }
-.ctx-text { flex:1; }
-.ctx-btns { display:flex; gap:4px; flex-shrink:0; }
-.ctx-btn { background:none; border:none; cursor:pointer; font-size:13px; padding:2px 4px; border-radius:4px; color:#9AA0A6; transition:all .1s; }
-.ctx-btn:hover { background:#F1F3F4; color:#202124; }
-.ctx-btn.done-btn.active { color:#34A853; }
-.ctx-time { font-size:10px; color:#9AA0A6; margin-top:3px; font-family:monospace; }
-.reply-row { display:flex; gap:8px; margin-top:10px; }
-.reply-input { flex:1; background:#fff; border:1px solid #DADCE0; border-radius:24px; padding:9px 16px; font-family:'Inter',sans-serif; font-size:13px; color:#202124; outline:none; transition:border-color .15s,box-shadow .15s; resize:none; line-height:1.4; }
-.reply-input::placeholder { color:#9AA0A6; }
-.reply-input:focus { border-color:#1A73E8; box-shadow:0 0 0 3px rgba(26,115,232,.12); }
-.reply-btn { background:#1A73E8; color:#fff; border:none; border-radius:24px; padding:9px 20px; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; align-self:flex-end; transition:background .12s; }
-.reply-btn:hover { background:#1557B0; }
-
-/* EMPTY */
-.empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 40px; text-align:center; }
-.empty-icon { font-size:40px; margin-bottom:14px; opacity:.5; }
-.empty-title { font-size:15px; font-weight:500; color:#5F6368; margin-bottom:6px; }
-.empty-sub { font-size:13px; color:#9AA0A6; max-width:280px; line-height:1.5; }
-
-/* CONFIRM DIALOG */
-.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:100; align-items:center; justify-content:center; }
-.overlay.show { display:flex; }
-.dialog { background:#fff; border-radius:12px; padding:24px; max-width:340px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.15); }
-.dialog-title { font-size:15px; font-weight:600; margin-bottom:8px; }
-.dialog-body { font-size:13px; color:#5F6368; line-height:1.5; margin-bottom:20px; }
-.dialog-btns { display:flex; gap:8px; justify-content:flex-end; }
-.btn-cancel { padding:8px 16px; border-radius:6px; border:1px solid #DADCE0; background:#fff; font-size:13px; font-weight:500; cursor:pointer; color:#5F6368; }
-.btn-cancel:hover { background:#F1F3F4; }
-.btn-confirm-del { padding:8px 16px; border-radius:6px; border:none; background:#EA4335; color:#fff; font-size:13px; font-weight:600; cursor:pointer; }
-.btn-confirm-del:hover { background:#C5221F; }
-
-/* REPORTS CONTENT */
-.reports-content { padding:24px 36px; max-width:840px; }
-::-webkit-scrollbar { width:5px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:#DADCE0; border-radius:4px; }
-
-/* TOAST */
-.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#202124; color:#fff; padding:10px 20px; border-radius:8px; font-size:13px; font-weight:500; z-index:200; transition:transform .3s; pointer-events:none; }
-.toast.show { transform:translateX(-50%) translateY(0); }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+  }
+  body {
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  h1, h2, h3, .font-headline {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .report-modal { display: none; }
+  .report-modal.active { display: flex; }
+  .status-auto     { background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
+  .status-actioned { background:#ECFDF5; color:#065F46; border-color:#A7F3D0; }
+  .status-flagged  { background:#FEF2F2; color:#991B1B; border-color:#FECACA; }
+  .dot-auto     { background:#2563EB; }
+  .dot-actioned { background:#059669; }
+  .dot-flagged  { background:#DC2626; }
+  .hover-blue:hover  { box-shadow: 0 12px 24px rgba(0,123,255,0.08); }
+  .hover-green:hover { box-shadow: 0 12px 24px rgba(16,185,129,0.08); }
+  .hover-red:hover   { box-shadow: 0 12px 24px rgba(220,38,38,0.08); }
+  .prose-report h2 {
+    font-size:0.65rem; font-weight:900; letter-spacing:0.2em;
+    color:#94A3B8; text-transform:uppercase;
+    display:flex; align-items:center; gap:1rem;
+    margin:2.5rem 0 1rem;
+    font-family:'Inter', sans-serif;
+  }
+  .prose-report h2::after { content:''; flex:1; height:1px; background:#E2E8F0; }
+  .prose-report p  { color:#334155; line-height:1.75; font-size:0.9rem; margin-bottom:0.75rem; }
+  .prose-report strong { color:#0F172A; }
+  .prose-report ul { list-style:disc; padding-left:1.5rem; color:#334155; font-size:0.9rem; line-height:1.75; margin-bottom:0.75rem; }
+  .prose-report li { margin-bottom:0.25rem; }
+  .skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 0.5rem;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .fade-in { animation: fadeIn 0.3s ease both; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 </style>
 </head>
-<body>
+<body class="flex min-h-screen">
 
-<div class="app">
-  <aside class="sidebar">
-    <div class="sidebar-logo" onclick="goHome()">
-      <div class="logo-mark">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M3 8.5L6.5 12L13 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <span class="logo-name">Signal</span>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-label">Clients</div>
-      <div id="client-list"><div style="padding:6px 10px;color:#9AA0A6;font-size:12px">Loading...</div></div>
-    </div>
-    <div class="sidebar-footer">
-      <div class="webhook-chip" onclick="copyWebhook()">
-        <div class="webhook-chip-label">Webhook endpoint</div>
-        <div class="webhook-chip-url" id="webhook-url">Click to copy</div>
-      </div>
-    </div>
-  </aside>
+<!-- SIDE NAV -->
+<nav class="h-screen w-64 fixed left-0 top-0 pt-20 bg-slate-50 flex flex-col gap-2 px-4 z-50 border-r border-slate-200">
+  <div class="absolute top-6 left-8">
+    <h1 class="font-extrabold text-blue-700 text-2xl tracking-tight">Signal</h1>
+    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Performance Analytics</p>
+  </div>
+  <div class="space-y-1 mt-6">
+    <a class="flex items-center gap-3 px-4 py-2.5 bg-white text-blue-700 shadow-sm rounded-lg text-sm font-medium" href="#">
+      <span class="material-symbols-outlined text-[20px]">dashboard</span><span>Dashboard</span>
+    </a>
+    <a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 rounded-lg text-sm font-medium" href="#">
+      <span class="material-symbols-outlined text-[20px]">analytics</span><span>Reports</span>
+    </a>
+    <a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 rounded-lg text-sm font-medium" href="#">
+      <span class="material-symbols-outlined text-[20px]">settings</span><span>Settings</span>
+    </a>
+  </div>
+  <div class="mt-auto pb-8">
+    <a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 rounded-lg text-sm font-medium" href="#">
+      <span class="material-symbols-outlined text-[20px]">contact_support</span><span>Support</span>
+    </a>
+  </div>
+</nav>
 
-  <div class="main" id="main">
-    <div class="topbar">
-      <div class="topbar-title" id="topbar-title">Signal</div>
-      <div class="live-dot"><div class="live-indicator"></div>Live</div>
+<!-- MAIN -->
+<main class="ml-64 flex-1 p-12 overflow-y-auto">
+  <header class="fixed top-0 right-0 left-64 z-40 bg-white/80 backdrop-blur-xl h-16 border-b border-slate-100 px-8 flex justify-between items-center shadow-sm">
+    <div class="relative flex items-center bg-slate-100 px-4 py-1.5 rounded-lg w-80">
+      <span class="material-symbols-outlined text-slate-400 text-[18px] mr-2">search</span>
+      <input id="search-input" class="bg-transparent border-none text-xs text-slate-900 focus:ring-0 w-full placeholder:text-slate-500" placeholder="Find clients..." type="text"/>
+    </div>
+    <button onclick="loadDashboard()" class="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors" title="Refresh">
+      <span class="material-symbols-outlined">refresh</span>
+    </button>
+  </header>
+
+  <div class="mt-12 mb-10">
+    <h2 class="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">Client Performance</h2>
+    <div class="flex items-center gap-3 text-slate-400">
+      <span id="client-count" class="text-xs font-semibold uppercase tracking-wider">Loading...</span>
+      <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+      <span id="last-updated" class="text-xs font-semibold uppercase tracking-wider"></span>
+    </div>
+  </div>
+
+  <div class="flex gap-2 mb-8">
+    <button onclick="setFilter('all')"      data-filter="all"      class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-slate-300 bg-white text-slate-700 transition-all">All</button>
+    <button onclick="setFilter('auto')"     data-filter="auto"     class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-blue-200 bg-blue-50 text-blue-600 transition-all">Auto</button>
+    <button onclick="setFilter('actioned')" data-filter="actioned" class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-emerald-200 bg-emerald-50 text-emerald-600 transition-all">Actioned</button>
+    <button onclick="setFilter('flagged')"  data-filter="flagged"  class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-red-200 bg-red-50 text-red-600 transition-all">Flagged</button>
+  </div>
+
+  <section id="cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="skeleton h-64"></div>
+    <div class="skeleton h-64"></div>
+    <div class="skeleton h-64"></div>
+  </section>
+
+  <div id="empty-state" class="hidden text-center py-24">
+    <span class="material-symbols-outlined text-slate-300 text-5xl mb-4 block">inbox</span>
+    <p class="text-slate-500 font-medium">No reports found</p>
+    <p class="text-slate-400 text-sm mt-1">Reports will appear here once the Make scenario runs</p>
+  </div>
+
+  <footer id="kpi-footer" class="hidden mt-16 bg-white border border-slate-200 rounded-xl p-10 flex flex-wrap gap-16 shadow-sm">
+    <div>
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Total Clients</span>
+      <span id="kpi-total" class="text-4xl font-extrabold text-slate-900">0</span>
+    </div>
+    <div>
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Pending Review</span>
+      <span id="kpi-auto" class="text-4xl font-extrabold text-blue-600">0</span>
+    </div>
+    <div>
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Actioned</span>
+      <span id="kpi-actioned" class="text-4xl font-extrabold text-emerald-600">0</span>
+    </div>
+    <div>
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Flagged</span>
+      <span id="kpi-flagged" class="text-4xl font-extrabold text-red-600">0</span>
+    </div>
+  </footer>
+</main>
+
+<!-- REPORT MODAL -->
+<div id="report-modal" class="report-modal fixed inset-0 z-50 bg-black/30 backdrop-blur-sm items-start justify-end">
+  <div class="h-full w-full max-w-3xl bg-white shadow-2xl overflow-y-auto flex flex-col">
+    <div class="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-slate-100 px-8 py-5 flex justify-between items-center z-10">
+      <div>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Performance Report</p>
+        <h2 id="modal-client-name" class="text-xl font-extrabold text-slate-900"></h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="btn-flag" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg font-bold text-sm hover:border-red-300 hover:text-red-600 transition-all">
+          <span class="material-symbols-outlined text-[18px]">flag</span> Flag
+        </button>
+        <button id="btn-action" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-all shadow-md">
+          <span class="material-symbols-outlined text-[18px]">check_circle</span> Mark Actioned
+        </button>
+        <button onclick="closeModal()" class="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
     </div>
 
-    <!-- HOME -->
-    <div id="view-home">
-      <div class="greeting-panel">
-        <div class="greeting-eyebrow" id="g-time"></div>
-        <div class="greeting-headline" id="g-headline">Loading...</div>
-        <div class="greeting-body" id="g-body"></div>
-        <div class="alert-chips" id="g-chips"></div>
+    <div class="flex-1 px-8 py-8">
+      <div class="flex items-center gap-3 mb-8">
+        <span id="modal-status-badge" class="px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border w-fit"></span>
+        <span id="modal-date" class="text-xs text-slate-400 font-medium"></span>
       </div>
-      <div class="home-content">
-        <div class="section-label">All Clients</div>
-        <div id="home-cards"></div>
-      </div>
-    </div>
+      <div id="modal-report-text" class="prose-report mb-12"></div>
 
-    <!-- CLIENT VIEW -->
-    <div id="view-client" style="display:none">
-      <div class="reports-content">
-        <div class="section-label" id="client-heading">Reports</div>
-        <div id="reports-list"></div>
+      <div class="pt-8 border-t border-slate-200">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-base font-bold text-slate-900">Activity & Notes</h3>
+          <span id="notes-count" class="px-3 py-1 rounded-full bg-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500">0 Notes</span>
+        </div>
+        <div id="notes-list" class="space-y-4 mb-8"></div>
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden focus-within:border-blue-400 transition-colors">
+          <textarea id="note-input" class="w-full bg-transparent border-0 focus:ring-0 p-5 text-sm text-slate-800 placeholder-slate-400 min-h-[100px] resize-none" placeholder="Add a note for the management team..."></textarea>
+          <div class="px-4 py-3 bg-slate-50 flex justify-end border-t border-slate-100">
+            <button id="post-note-btn" onclick="postNote()" class="bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all">
+              Post Note
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
-
-<!-- DELETE CONFIRM DIALOG -->
-<div class="overlay" id="confirm-overlay">
-  <div class="dialog">
-    <div class="dialog-title" id="dialog-title">Delete report?</div>
-    <div class="dialog-body" id="dialog-body">This will permanently delete this report and all context notes. This cannot be undone.</div>
-    <div class="dialog-btns">
-      <button class="btn-cancel" onclick="closeDialog()">Cancel</button>
-      <button class="btn-confirm-del" id="dialog-confirm">Delete</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-const BASE = window.location.origin;
-let data = {};
-let activeClient = null;
-let pollTimer = null;
-let typing = false;
-let pendingDelete = null;
+  const API = '';
+  let allClients = [];
+  let currentFilter = 'all';
+  let currentReportId = null;
 
-document.getElementById('webhook-url').textContent = `${BASE}/api/report`;
-
-async function init() {
-  await seedIfEmpty();
-  await refresh();
-}
-
-async function refresh() {
-  try {
-    const res = await fetch(`${BASE}/api/clients`);
-    const clients = await res.json();
-    const fetches = clients.map(c =>
-      fetch(`${BASE}/api/reports/${encodeURIComponent(c)}`).then(r => r.json()).then(reps => [c, reps])
-    );
-    const results = await Promise.all(fetches);
-    results.forEach(([c, reps]) => data[c] = reps);
-    renderSidebar(clients);
-    if (!activeClient) renderHome(clients);
-    else renderReports(activeClient);
-  } catch(e) { console.error(e); }
-}
-
-// ── STATUS LOGIC ──
-function autoStatus(reportText) {
-  if (!reportText) return 'green';
-  const t = reportText.toLowerCase();
-  if (['urgent','asap','immediate action','critical issue','hemorrhaging','burning budget','sub-1.0 roas','0.9 roas','paused immediately'].some(w => t.includes(w))) return 'red';
-  if (['concern','attention','cpa inflation','efficiency decline','deterioration','significant spike','budget waste'].some(w => t.includes(w))) return 'orange';
-  return 'green';
-}
-
-function resolvedStatus(report) {
-  if (report.status && report.status !== 'auto') return report.status;
-  return autoStatus(report.report_text);
-}
-
-function statusConfig(s) {
-  return {
-    green:    { dot:'dot-green',  tag:'tag-green',  label:'Healthy',    emoji:'✅', icon:'icon-green'  },
-    orange:   { dot:'dot-orange', tag:'tag-orange', label:'Review',     emoji:'🟡', icon:'icon-orange' },
-    red:      { dot:'dot-red',    tag:'tag-red',    label:'Act now',    emoji:'🔴', icon:'icon-red'    },
-    actioned: { dot:'dot-blue',   tag:'tag-blue',   label:'Actioned',   emoji:'🔵', icon:'icon-blue'   },
-    resolved: { dot:'dot-green',  tag:'tag-green',  label:'Resolved',   emoji:'✅', icon:'icon-green'  },
-  }[s] || { dot:'dot-green', tag:'tag-green', label:'Healthy', emoji:'✅', icon:'icon-green' };
-}
-
-function clientStatus(client) {
-  const reps = data[client] || [];
-  if (!reps.length) return 'green';
-  return resolvedStatus(reps[0]);
-}
-
-// Trend: compare latest two reports' CPA mention
-function clientTrend(client) {
-  const reps = data[client] || [];
-  if (reps.length < 2) return 'flat';
-  const s1 = autoStatus(reps[0].report_text);
-  const s2 = autoStatus(reps[1].report_text);
-  const rank = { green:0, orange:1, red:2, actioned:1, resolved:0 };
-  const diff = (rank[s1]||0) - (rank[s2]||0);
-  if (diff < 0) return 'up';
-  if (diff > 0) return 'down';
-  return 'flat';
-}
-
-function trendHtml(trend) {
-  if (trend === 'up')   return `<span class="trend trend-up">↑</span>`;
-  if (trend === 'down') return `<span class="trend trend-down">↓</span>`;
-  return `<span class="trend trend-flat">→</span>`;
-}
-
-// ── SIDEBAR ──
-function renderSidebar(clients) {
-  const el = document.getElementById('client-list');
-  if (!clients.length) { el.innerHTML = `<div style="padding:6px 10px;color:#9AA0A6;font-size:12px">No clients yet</div>`; return; }
-  el.innerHTML = clients.map(c => {
-    const s = clientStatus(c);
-    const cfg = statusConfig(s);
-    const trend = clientTrend(c);
-    return `
-      <div class="client-row ${activeClient===c?'active':''}" onclick="selectClient('${esc(c)}')">
-        <div class="dot ${cfg.dot}"></div>
-        <div class="client-label">${esc(c)}</div>
-        <div class="client-right">
-          ${trendHtml(trend)}
-          <div class="client-tag ${cfg.tag}">${cfg.label}</div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-// ── HOME ──
-function renderHome(clients) {
-  document.getElementById('view-home').style.display = 'block';
-  document.getElementById('view-client').style.display = 'none';
-  document.getElementById('topbar-title').textContent = greeting();
-  const now = new Date();
-  document.getElementById('g-time').textContent =
-    now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
-    + ' · ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('g-headline').innerHTML = `${greeting()}, <strong>Mitch</strong> 👋`;
-
-  const red      = clients.filter(c => clientStatus(c) === 'red');
-  const orange   = clients.filter(c => clientStatus(c) === 'orange');
-  const actioned = clients.filter(c => clientStatus(c) === 'actioned');
-  const healthy  = clients.filter(c => ['green','resolved'].includes(clientStatus(c)));
-
-  let body = '';
-  if (!clients.length) {
-    body = `No clients connected yet. Your webhook is ready — connect Make.com to start receiving daily reports.`;
-  } else if (red.length) {
-    body = `Hope you're doing well. You need to take a look at <b>${red.join(', ')}</b> as soon as possible — there are issues that need your attention right now.`;
-    if (orange.length) body += ` There's also something worth reviewing with <b>${orange.join(', ')}</b> when you get a chance.`;
-  } else if (orange.length) {
-    body = `Hope you're doing great. The ads are mostly looking good — the only thing to note (non-urgent) is <b>${orange.join(', ')}</b> ${orange.length===1?'has':'have'} a few metrics worth reviewing.`;
-  } else {
-    body = `Hope you're having a great day. All your accounts are looking healthy — no issues to flag, nothing urgent. Keep doing what you're doing. 🎉`;
+  async function loadDashboard() {
+    document.getElementById('client-count').textContent = 'Loading...';
+    document.getElementById('cards-grid').innerHTML =
+      '<div class="skeleton h-64"></div><div class="skeleton h-64"></div><div class="skeleton h-64"></div>';
+    try {
+      const res = await fetch(`${API}/api/reports`);
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const reports = await res.json();
+      const clientMap = {};
+      reports.forEach(r => {
+        if (!clientMap[r.client] || new Date(r.created_at) > new Date(clientMap[r.client].created_at)) {
+          clientMap[r.client] = r;
+        }
+      });
+      allClients = Object.entries(clientMap).map(([client, latestReport]) => ({ client, latestReport }));
+      renderDashboard();
+    } catch(e) {
+      document.getElementById('cards-grid').innerHTML = `
+        <div class="col-span-3 text-center py-16">
+          <span class="material-symbols-outlined text-slate-300 text-4xl block mb-3">cloud_off</span>
+          <p class="text-slate-500 font-medium">Could not connect to server</p>
+          <p class="text-slate-400 text-sm mt-1">${e.message}</p>
+          <button onclick="loadDashboard()" class="mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg">Retry</button>
+        </div>`;
+    }
   }
-  document.getElementById('g-body').innerHTML = body;
 
-  let chips = '';
-  if (red.length)      chips += `<div class="alert-chip chip-red" onclick="selectClient('${esc(red[0])}')"">🔴 ${red.length} — act now</div>`;
-  if (orange.length)   chips += `<div class="alert-chip chip-orange" onclick="selectClient('${esc(orange[0])}')">🟡 ${orange.length} to review</div>`;
-  if (actioned.length) chips += `<div class="alert-chip chip-blue">🔵 ${actioned.length} actioned</div>`;
-  if (healthy.length)  chips += `<div class="alert-chip chip-green">✅ ${healthy.length} healthy</div>`;
-  document.getElementById('g-chips').innerHTML = chips;
-
-  const cardsEl = document.getElementById('home-cards');
-  if (!clients.length) {
-    cardsEl.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No clients yet</div><div class="empty-sub">Reports will appear here once Make sends them.</div></div>`;
-    return;
+  function renderDashboard() {
+    const total = allClients.length;
+    const statuses = allClients.map(c => c.latestReport?.status || 'auto');
+    document.getElementById('client-count').textContent = `${total} Active Client${total !== 1 ? 's' : ''}`;
+    document.getElementById('last-updated').textContent = `Updated ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+    document.getElementById('kpi-total').textContent = total;
+    document.getElementById('kpi-auto').textContent = statuses.filter(s => s === 'auto').length;
+    document.getElementById('kpi-actioned').textContent = statuses.filter(s => s === 'actioned').length;
+    document.getElementById('kpi-flagged').textContent = statuses.filter(s => s === 'flagged').length;
+    document.getElementById('kpi-footer').classList.toggle('hidden', total === 0);
+    document.getElementById('empty-state').classList.toggle('hidden', total > 0);
+    renderCards();
   }
-  cardsEl.innerHTML = clients.map(c => {
-    const reps = data[c] || [];
-    const s = clientStatus(c);
-    const cfg = statusConfig(s);
-    const trend = clientTrend(c);
-    const preview = reps.length ? reps[0].report_text.replace(/[#*_\\n]/g,'').substring(0,130).trim()+'…' : 'No reports yet.';
-    const dateStr = reps.length ? fmtDate(reps[0].created_at) : '—';
-    return `
-      <div class="card" onclick="selectClient('${esc(c)}')" style="cursor:pointer">
-        <div class="card-header" style="border-bottom:1px solid #F0F0F0">
-          <div class="card-icon ${cfg.icon}">${cfg.emoji}</div>
-          <div>
-            <div class="card-title">${esc(c)}</div>
-            <div class="card-sub">${dateStr}</div>
-          </div>
-          <div class="client-right" style="margin-left:auto;gap:8px">
-            ${trendHtml(trend)}
-            <div class="client-tag ${cfg.tag}">${cfg.label}</div>
-          </div>
-        </div>
-        <div style="padding:12px 20px 14px;font-size:13px;color:#5F6368;line-height:1.55">${esc(preview)}</div>
-      </div>`;
-  }).join('');
-}
 
-// ── CLIENT VIEW ──
-function selectClient(client) {
-  activeClient = client;
-  document.getElementById('view-home').style.display = 'none';
-  document.getElementById('view-client').style.display = 'block';
-  document.getElementById('topbar-title').textContent = client;
-  document.getElementById('client-heading').textContent = `Reports — ${client}`;
-  renderSidebar(Object.keys(data));
-  renderReports(client);
-  if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(() => { if (!typing) refresh(); }, 30000);
-}
-
-function goHome() {
-  activeClient = null;
-  document.getElementById('view-home').style.display = 'block';
-  document.getElementById('view-client').style.display = 'none';
-  document.getElementById('topbar-title').textContent = greeting();
-  renderSidebar(Object.keys(data));
-  renderHome(Object.keys(data));
-  if (pollTimer) clearInterval(pollTimer);
-}
-
-function renderReports(client) {
-  const reps = data[client] || [];
-  const el = document.getElementById('reports-list');
-  if (!reps.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">No reports yet</div><div class="empty-sub">Reports for ${esc(client)} will appear here.</div></div>`;
-    return;
-  }
-  el.innerHTML = reps.map((r,i) => {
-    const s = resolvedStatus(r);
-    const cfg = statusConfig(s);
-    return `
-      <div class="card ${i===0?'open':''}" id="card-${r.id}">
-        <div class="card-header" onclick="toggleCard(${r.id})">
-          <div class="card-icon ${cfg.icon}">${cfg.emoji}</div>
-          <div>
-            <div class="card-title">${fmtDate(r.created_at)}</div>
-            <div class="card-sub">Generated ${fmtTime(r.created_at)}</div>
-          </div>
-          <div class="card-actions">
-            <div class="client-tag ${cfg.tag}">${cfg.label}</div>
-            <button class="btn-delete" onclick="confirmDeleteReport(event,${r.id})" title="Delete report">🗑</button>
-            <div class="card-chevron">⌄</div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="report-toolbar">
-            <button class="toolbar-btn" onclick="copyReport(${r.id})">📋 Copy report</button>
-            <button class="toolbar-btn" onclick="markResolved(${r.id})" style="${s==='resolved'?'display:none':''}">✅ Mark resolved</button>
-          </div>
-          <div class="report-text" id="text-${r.id}">${parseMd(r.report_text)}</div>
-          <div class="status-history" id="history-${r.id}"></div>
-        </div>
-        <div class="context-area" id="ctx-${r.id}">
-          <div class="context-label">Your context &amp; notes</div>
-          <div id="msgs-${r.id}"></div>
-          <div class="reply-row">
-            <textarea class="reply-input" id="inp-${r.id}" rows="2"
-              placeholder="Add context: budget changes, bid adjustments, tracking issues…"
-              onkeydown="handleKey(event,${r.id})" onfocus="typing=true" onblur="typing=false"></textarea>
-            <button class="reply-btn" onclick="sendReply(${r.id})">Save note</button>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-  reps.forEach(r => loadDetail(r.id));
-}
-
-function toggleCard(id) { document.getElementById(`card-${id}`).classList.toggle('open'); }
-
-async function loadDetail(id) {
-  try {
-    const r = await fetch(`${BASE}/api/report/${id}`);
-    const d = await r.json();
-    renderMsgs(id, d.messages || []);
-    renderHistory(id, d.history || []);
-  } catch(e) {}
-}
-
-function renderMsgs(id, messages) {
-  const el = document.getElementById(`msgs-${id}`);
-  if (!el) return;
-  if (!messages.length) { el.innerHTML = ''; return; }
-  el.innerHTML = messages.map(m => `
-    <div class="ctx-msg" id="msg-${m.id}">
-      <div class="ctx-avatar">M</div>
-      <div class="ctx-content">
-        <div class="ctx-bubble ${m.done?'done-bubble':''}">
-          <span class="ctx-text">${esc(m.message)}</span>
-          <div class="ctx-btns">
-            <button class="ctx-btn done-btn ${m.done?'active':''}" onclick="toggleDone(${m.id},${id})" title="${m.done?'Mark undone':'Mark done'}">✓</button>
-            <button class="ctx-btn" onclick="confirmDeleteNote(${m.id},${id})" title="Delete note">✕</button>
-          </div>
-        </div>
-        <div class="ctx-time">${fmtTime(m.created_at)}</div>
-      </div>
-    </div>`).join('');
-}
-
-function renderHistory(id, history) {
-  const el = document.getElementById(`history-${id}`);
-  if (!el || !history.length) return;
-  const cfg = statusConfig;
-  el.innerHTML = `<div style="margin-top:16px;padding-top:12px;border-top:1px solid #F0F0F0">
-    <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#9AA0A6;margin-bottom:8px">Status history</div>
-    ${history.map(h => {
-      const toCfg = statusConfig(h.to_status);
-      return `<div class="history-item">
-        <span class="history-badge ${toCfg.tag}">${toCfg.label}</span>
-        <span>${fmtTime(h.created_at)}</span>
-        ${h.reason ? `<span>— "${esc(h.reason.substring(0,60))}${h.reason.length>60?'…':''}"</span>` : ''}
-      </div>`;
-    }).join('')}
-  </div>`;
-}
-
-// ── ACTIONS ──
-function handleKey(e, id) { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendReply(id);} }
-
-async function sendReply(id) {
-  const inp = document.getElementById(`inp-${id}`);
-  const msg = inp.value.trim();
-  if (!msg) return;
-  inp.value = '';
-  await fetch(`${BASE}/api/context`, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({report_id:id, message:msg})
-  });
-  // Refresh this report's data and re-render
-  await refresh();
-  showToast('Note saved — status updated to Actioned');
-}
-
-async function toggleDone(msgId, reportId) {
-  await fetch(`${BASE}/api/context/${msgId}/done`, { method:'PATCH' });
-  loadDetail(reportId);
-}
-
-async function confirmDeleteReport(e, id) {
-  e.stopPropagation();
-  pendingDelete = { type:'report', id };
-  document.getElementById('dialog-title').textContent = 'Delete report?';
-  document.getElementById('dialog-body').textContent = 'This will permanently delete this report and all context notes. This cannot be undone.';
-  document.getElementById('dialog-confirm').onclick = executeDelete;
-  document.getElementById('confirm-overlay').classList.add('show');
-}
-
-function confirmDeleteNote(msgId, reportId) {
-  pendingDelete = { type:'note', id:msgId, reportId };
-  document.getElementById('dialog-title').textContent = 'Delete note?';
-  document.getElementById('dialog-body').textContent = 'This will permanently delete this context note.';
-  document.getElementById('dialog-confirm').onclick = executeDelete;
-  document.getElementById('confirm-overlay').classList.add('show');
-}
-
-function closeDialog() {
-  document.getElementById('confirm-overlay').classList.remove('show');
-  pendingDelete = null;
-}
-
-async function executeDelete() {
-  if (!pendingDelete) return;
-  const del = pendingDelete;
-  closeDialog();
-  if (del.type === 'report') {
-    await fetch(`${BASE}/api/report/${del.id}`, { method:'DELETE' });
-    await refresh();
-    showToast('Report deleted');
-  } else {
-    await fetch(`${BASE}/api/context/${del.id}`, { method:'DELETE' });
-    loadDetail(del.reportId);
-    showToast('Note deleted');
-  }
-}
-
-async function markResolved(id) {
-  await fetch(`${BASE}/api/report/${id}/status`, {
-    method:'PATCH',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ status:'resolved', reason:'Manually marked as resolved' })
-  });
-  await refresh();
-  showToast('Marked as resolved');
-}
-
-function copyReport(id) {
-  const el = document.getElementById(`text-${id}`);
-  if (!el) return;
-  navigator.clipboard.writeText(el.innerText);
-  showToast('Report copied to clipboard');
-}
-
-// ── UTILS ──
-function greeting() {
-  const h = new Date().getHours();
-  return h<12?'Good morning':h<17?'Good afternoon':'Good evening';
-}
-function fmtDate(dt) { return new Date(dt).toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Australia/Sydney'}); }
-function fmtTime(dt) { return new Date(dt).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit',timeZone:'Australia/Sydney'}); }
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function parseMd(text) {
-  text = text.replace(/\\n/g, '\n');
-  return text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
-    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
-    .replace(/^# (.+)$/gm,'<h1>$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/^- (.+)$/gm,'<li>$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>')
-    .replace(/(<li>.*?<\/li>\n?)+/gs, s=>`<ul>${s}</ul>`)
-    .replace(/\n\n+/g,'</p><p>')
-    .replace(/\n/g,'<br>');
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-function copyWebhook() {
-  navigator.clipboard.writeText(`${BASE}/api/report`);
-  showToast('Webhook URL copied');
-}
-
-// Close dialog on overlay click
-document.getElementById('confirm-overlay').addEventListener('click', function(e) {
-  if (e.target === this) closeDialog();
-});
-
-async function seedIfEmpty() {
-  try {
-    const r = await fetch(`${BASE}/api/clients`);
-    const clients = await r.json();
-    if (clients.length > 0) return;
-    await fetch(`${BASE}/api/report`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        client:'SoSo Swim',
-        report_text:`# SoSo Swim Weekly Performance Report\n**Week Ending 08/03/2026**\n\n## 1. ACCOUNT OVERVIEW\nPerformance remains stable with £704 spend (-0.3% WoW) and 40.7 conversions (-2.2% WoW). ROAS of 6.11 is healthy. CPA increased marginally to £17.29 (+2.0% WoW). UK Pmax driving account stability.\n\n## 2. CAMPAIGN ANALYSIS\n**Strong Performers:**\n- **UK Pmax**: £14.76 CPA (-17.6% WoW), 7.47 ROAS, driving 41% of conversions\n- **NA Pmax**: CPA dropped 39.2% to £18.09 despite 21.6% spend increase\n\n**Underperformers:**\n- **NZ/AU Pmax**: CPA spiked 38.6% to £66.30 with 1.24 ROAS — clear efficiency breakdown\n- **Branded Shopping**: Severe CPA deterioration across all geos\n\n## 3. CONCERNS\n- ANZ Pmax hemorrhaging efficiency — urgent review needed\n- Branded Shopping CPA explosion across all markets\n\n## 4. POSITIVE SIGNALS\n- UK driving account with strong Pmax and branded volume\n- NA Pmax showing significant efficiency gains while scaling\n\n## 5. ACTIONS\n1. **URGENT**: Audit ANZ Pmax — review targeting and bid strategy immediately\n2. Investigate conversion tracking — validate pixel implementation\n3. Audit branded shopping bid strategies across all geos\n4. Scale UK Pmax budget — reallocate spend from ANZ given 7.47 ROAS`
-      })
+  function renderCards() {
+    const grid = document.getElementById('cards-grid');
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const filtered = allClients.filter(c => {
+      const status = c.latestReport?.status || 'auto';
+      return (currentFilter === 'all' || status === currentFilter) &&
+             (!search || c.client.toLowerCase().includes(search));
     });
-  } catch(e) {}
-}
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="col-span-3 text-center py-16 text-slate-400 text-sm">No clients match this filter.</div>';
+      return;
+    }
+    grid.innerHTML = filtered.map((c, i) => buildCard(c, i)).join('');
+  }
 
-init();
+  function buildCard(c, i) {
+    const r = c.latestReport;
+    const status = r?.status || 'auto';
+    const label = status.charAt(0).toUpperCase() + status.slice(1);
+    const preview = r ? stripMarkdown(r.report_text).slice(0, 155) + '...' : 'No report available yet.';
+    const dateStr = r ? fmtDate(r.created_at) : '';
+    const hoverClass = status === 'flagged' ? 'hover-red' : status === 'actioned' ? 'hover-green' : 'hover-blue';
+    const accentRgb = status === 'flagged' ? '220,38,38' : status === 'actioned' ? '16,185,129' : '37,99,235';
+    return `
+      <div class="fade-in bg-white border border-slate-200 rounded-lg p-8 group ${hoverClass} transition-all duration-300 cursor-pointer"
+           style="animation-delay:${i*60}ms"
+           onclick="openReport('${escAttr(c.client)}', ${r?.id ?? 'null'})">
+        <div class="flex justify-between items-start mb-6">
+          <div class="pr-3 min-w-0">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 block">${dateStr ? 'LAST REPORT: '+dateStr : 'NO REPORTS YET'}</span>
+            <h3 class="text-xl font-bold text-slate-900 truncate">${c.client}</h3>
+          </div>
+          <span class="status-${status} flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border">
+            <span class="w-1.5 h-1.5 rounded-full dot-${status}"></span>${label}
+          </span>
+        </div>
+        <div class="space-y-4 mb-8">
+          <div class="h-[2px] w-8 group-hover:w-full transition-all duration-500" style="background:rgba(${accentRgb},0.15)"></div>
+          <p class="text-slate-600 text-sm leading-relaxed">${preview}</p>
+        </div>
+        <button class="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white font-bold text-sm rounded-lg hover:bg-blue-700 transition-all active:scale-[0.98]">
+          Open Full Report <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </button>
+      </div>`;
+  }
+
+  function setFilter(f) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.style.opacity = (f === 'all' || btn.dataset.filter === f) ? '1' : '0.45';
+    });
+    renderCards();
+  }
+
+  document.getElementById('search-input').addEventListener('input', renderCards);
+
+  async function openReport(clientName, reportId) {
+    currentReportId = reportId;
+    document.getElementById('modal-client-name').textContent = clientName;
+    document.getElementById('modal-report-text').innerHTML =
+      '<div class="skeleton h-48 mb-4"></div><div class="skeleton h-32 mb-4"></div><div class="skeleton h-24"></div>';
+    document.getElementById('notes-list').innerHTML = '';
+    document.getElementById('notes-count').textContent = '0 Notes';
+    document.getElementById('report-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    try {
+      let report, messages = [];
+      if (reportId) {
+        const res = await fetch(`${API}/api/report/${reportId}`);
+        const data = await res.json();
+        report = data;
+        messages = data.messages || [];
+      } else {
+        const res = await fetch(`${API}/api/reports/${encodeURIComponent(clientName)}`);
+        const reports = await res.json();
+        if (reports?.length > 0) {
+          currentReportId = reports[0].id;
+          const res2 = await fetch(`${API}/api/report/${currentReportId}`);
+          const data = await res2.json();
+          report = data;
+          messages = data.messages || [];
+        }
+      }
+
+      if (!report) {
+        document.getElementById('modal-report-text').innerHTML = '<p class="text-slate-400">No report found.</p>';
+        return;
+      }
+
+      const status = report.status || 'auto';
+      const badge = document.getElementById('modal-status-badge');
+      badge.className = `status-${status} px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border w-fit`;
+      badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full dot-${status}"></span>${status.charAt(0).toUpperCase()+status.slice(1)}`;
+      document.getElementById('modal-date').textContent = fmtDate(report.created_at);
+
+      const btnAction = document.getElementById('btn-action');
+      const btnFlag = document.getElementById('btn-flag');
+      btnFlag.onclick = () => updateStatus(status === 'flagged' ? 'auto' : 'flagged');
+      btnFlag.innerHTML = status === 'flagged'
+        ? '<span class="material-symbols-outlined text-[18px]">undo</span> Unflag'
+        : '<span class="material-symbols-outlined text-[18px]">flag</span> Flag';
+      btnAction.onclick = () => updateStatus(status === 'actioned' ? 'auto' : 'actioned');
+      btnAction.innerHTML = status === 'actioned'
+        ? '<span class="material-symbols-outlined text-[18px]">undo</span> Unaction'
+        : '<span class="material-symbols-outlined text-[18px]">check_circle</span> Mark Actioned';
+
+      document.getElementById('modal-report-text').innerHTML = renderReportText(report.report_text);
+      renderNotes(messages);
+
+    } catch(e) {
+      document.getElementById('modal-report-text').innerHTML =
+        `<p class="text-red-500 text-sm">Error loading report: ${e.message}</p>`;
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('report-modal').classList.remove('active');
+    document.body.style.overflow = '';
+    currentReportId = null;
+  }
+
+  document.getElementById('report-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  async function updateStatus(newStatus) {
+    if (!currentReportId) return;
+    try {
+      const res = await fetch(`${API}/api/report/${currentReportId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus, reason: `Manually set to ${newStatus}` })
+      });
+      if (!res.ok) throw new Error('Update failed');
+      closeModal();
+      loadDashboard();
+    } catch(e) {
+      alert('Failed to update status: ' + e.message);
+    }
+  }
+
+  function renderNotes(messages) {
+    const list = document.getElementById('notes-list');
+    document.getElementById('notes-count').textContent = `${messages.length} Note${messages.length !== 1 ? 's' : ''}`;
+    if (messages.length === 0) {
+      list.innerHTML = '<p class="text-sm text-slate-400 italic">No notes yet.</p>';
+      return;
+    }
+    list.innerHTML = messages.map(m => `
+      <div class="flex gap-4 ${m.done ? 'opacity-55' : ''}">
+        <div class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <span class="material-symbols-outlined text-slate-400 text-[18px]">person</span>
+        </div>
+        <div class="flex-1 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-center mb-2">
+            <p class="text-xs font-semibold text-slate-400">${fmtDate(m.created_at)}</p>
+            <button onclick="toggleDone(${m.id})" class="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${m.done ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 hover:bg-emerald-50 hover:text-emerald-700'}">
+              <span class="material-symbols-outlined text-[12px]">${m.done ? 'task_alt' : 'check'}</span>
+              ${m.done ? 'Done' : 'Mark Done'}
+            </button>
+          </div>
+          <p class="text-sm text-slate-600 leading-relaxed ${m.done ? 'line-through text-slate-400' : ''}">${escHtml(m.message)}</p>
+        </div>
+      </div>`).join('');
+  }
+
+  async function postNote() {
+    const input = document.getElementById('note-input');
+    const btn = document.getElementById('post-note-btn');
+    const message = input.value.trim();
+    if (!message || !currentReportId) return;
+    btn.textContent = 'Posting...';
+    btn.disabled = true;
+    try {
+      await fetch(`${API}/api/context`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report_id: currentReportId, message, is_action: false })
+      });
+      input.value = '';
+      const res = await fetch(`${API}/api/report/${currentReportId}`);
+      const data = await res.json();
+      renderNotes(data.messages || []);
+      loadDashboard();
+    } catch(e) {
+      alert('Failed to post note: ' + e.message);
+    } finally {
+      btn.textContent = 'Post Note';
+      btn.disabled = false;
+    }
+  }
+
+  async function toggleDone(noteId) {
+    try {
+      await fetch(`${API}/api/context/${noteId}/done`, { method: 'PATCH' });
+      const res = await fetch(`${API}/api/report/${currentReportId}`);
+      const data = await res.json();
+      renderNotes(data.messages || []);
+    } catch(e) {}
+  }
+
+  function renderReportText(text) {
+    if (!text) return '<p class="text-slate-400">No content.</p>';
+    return text
+      .replace(/^#{1,3} (.+)$/gm, '<h2>$1</h2>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/^[\-\*] (.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>[\s\S]+?<\/li>)(?=\n|$)/g, '<ul>$1</ul>')
+      .split(/\n{2,}/)
+      .map(block => {
+        block = block.trim();
+        if (!block) return '';
+        if (block.startsWith('<h2>') || block.startsWith('<ul>')) return block;
+        return `<p>${block.replace(/\n/g, ' ')}</p>`;
+      })
+      .join('\n');
+  }
+
+  function stripMarkdown(text) {
+    if (!text) return '';
+    return text
+      .replace(/^#{1,6} /gm, '')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/\*(.+?)\*/g, '$1')
+      .replace(/^[\-\*] /gm, '')
+      .replace(/\n+/g, ' ')
+      .trim();
+  }
+
+  function fmtDate(str) {
+    if (!str) return '';
+    try { return new Date(str).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}); }
+    catch(e) { return str; }
+  }
+
+  function escAttr(str) {
+    return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  }
+
+  function escHtml(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  loadDashboard();
 </script>
 </body>
 </html>
