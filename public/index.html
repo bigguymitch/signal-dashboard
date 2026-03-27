@@ -1,233 +1,579 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Signal | Client Performance Dashboard</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-  tailwind.config = {
-    darkMode: "class",
-    theme: {
-      extend: {
-        fontFamily: {
-          "headline": ["Manrope", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
-          "body": ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
-        },
-        borderRadius: {
-          "DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"
-        },
-      },
-    },
-  }
-</script>
+<title>Signal | Performance Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0&display=swap" rel="stylesheet"/>
 <style>
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: #F7F8FA;
+    color: #111827;
+    margin: 0;
+  }
+
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     vertical-align: middle;
-  }
-  body {
-    background-color: #F8FAFC;
-    color: #0F172A;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-  h1, h2, h3 {
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1;
   }
 
-  /* Modal */
-  .report-modal { display: none; }
-  .report-modal.active { display: flex; }
-
-  /* Score badges */
-  .score-RED    { background:#FEF2F2; color:#991B1B; border-color:#FECACA; }
-  .score-AMBER  { background:#FFFBEB; color:#92400E; border-color:#FDE68A; }
-  .score-GREEN  { background:#ECFDF5; color:#065F46; border-color:#A7F3D0; }
-  .dot-RED      { background:#DC2626; }
-  .dot-AMBER    { background:#F59E0B; }
-  .dot-GREEN    { background:#059669; }
-
-  /* Actioned overrides card to blue */
-  .score-ACTIONED { background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
-  .dot-ACTIONED   { background:#2563EB; }
-
-  /* Card hover */
-  .hover-red:hover    { box-shadow: 0 12px 24px rgba(220,38,38,0.10); border-color:#FECACA; }
-  .hover-amber:hover  { box-shadow: 0 12px 24px rgba(245,158,11,0.10); border-color:#FDE68A; }
-  .hover-green:hover  { box-shadow: 0 12px 24px rgba(16,185,129,0.10); border-color:#A7F3D0; }
-  .hover-blue:hover   { box-shadow: 0 12px 24px rgba(37,99,235,0.10); border-color:#BFDBFE; }
-
-  /* Report prose */
-  .prose-report h2 {
-    font-size:0.65rem; font-weight:900; letter-spacing:0.2em;
-    color:#94A3B8; text-transform:uppercase;
-    display:flex; align-items:center; gap:1rem;
-    margin:2.5rem 0 1rem;
-    font-family:'Inter', sans-serif;
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: #fff;
+    border-right: 1px solid #E5E7EB;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    z-index: 40;
   }
-  .prose-report h2::after { content:''; flex:1; height:1px; background:#E2E8F0; }
-  .prose-report p  { color:#334155; line-height:1.75; font-size:0.9rem; margin-bottom:0.75rem; }
-  .prose-report strong { color:#0F172A; }
-  .prose-report ul { list-style:disc; padding-left:1.5rem; color:#334155; font-size:0.9rem; line-height:1.75; margin-bottom:0.75rem; }
-  .prose-report li { margin-bottom:0.25rem; }
-
-  /* Skeleton */
-  .skeleton {
-    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 0.5rem;
+  .sidebar-logo {
+    padding: 24px 24px 20px;
+    border-bottom: 1px solid #F3F4F6;
   }
+  .sidebar-logo h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1D4ED8;
+    margin: 0 0 2px;
+    letter-spacing: -0.3px;
+  }
+  .sidebar-logo p {
+    font-size: 10px;
+    font-weight: 600;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0;
+  }
+  .sidebar-nav {
+    padding: 16px 12px;
+    flex: 1;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #6B7280;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: #F9FAFB; color: #111827; }
+  .nav-item.active { background: #EFF6FF; color: #1D4ED8; font-weight: 600; }
+  .nav-item .material-symbols-outlined { font-size: 18px; }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: 220px;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    background: rgba(247,248,250,0.9);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid #E5E7EB;
+    padding: 12px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 30;
+  }
+  .search-wrap {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 7px 12px;
+    gap: 8px;
+    width: 280px;
+  }
+  .search-wrap input {
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: #111827;
+    background: transparent;
+    width: 100%;
+    font-family: inherit;
+  }
+  .search-wrap input::placeholder { color: #9CA3AF; }
+  .search-wrap .material-symbols-outlined { font-size: 16px; color: #9CA3AF; }
+
+  .content { padding: 32px; }
+
+  .page-title { font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 4px; letter-spacing: -0.3px; }
+  .page-sub { font-size: 12.5px; color: #9CA3AF; font-weight: 500; }
+
+  /* ── FILTER PILLS ── */
+  .filter-row { display: flex; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: #fff;
+    color: #6B7280;
+    border-color: #E5E7EB;
+  }
+  .pill:hover { border-color: #D1D5DB; color: #374151; }
+  .pill.active { border-color: currentColor; }
+  .pill-all.active   { color: #374151; background: #F9FAFB; border-color: #D1D5DB; }
+  .pill-red.active   { color: #991B1B; background: #FEF2F2; border-color: #FECACA; }
+  .pill-amber.active { color: #92400E; background: #FFFBEB; border-color: #FDE68A; }
+  .pill-green.active { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
+  .pill-done.active  { color: #1D4ED8; background: #EFF6FF; border-color: #BFDBFE; }
+  .pill-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  /* ── KPI ROW ── */
+  .kpi-row { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+  .kpi-card {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 16px 20px;
+    min-width: 120px;
+    flex: 1;
+  }
+  .kpi-label { font-size: 11px; font-weight: 600; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .kpi-red   .kpi-value { color: #DC2626; }
+  .kpi-amber .kpi-value { color: #D97706; }
+  .kpi-green .kpi-value { color: #059669; }
+  .kpi-done  .kpi-value { color: #2563EB; }
+  .kpi-total .kpi-value { color: #111827; }
+
+  /* ── GRID ── */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+  /* ── CARD ── */
+  .card {
+    background: #fff;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 22px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    animation: fadeUp 0.3s ease both;
+  }
+  .card:hover { border-color: #D1D5DB; box-shadow: 0 4px 20px rgba(0,0,0,0.06); transform: translateY(-1px); }
+  .card-red   { border-left: 3px solid #EF4444; }
+  .card-amber { border-left: 3px solid #F59E0B; }
+  .card-green { border-left: 3px solid #10B981; }
+  .card-done  { border-left: 3px solid #3B82F6; opacity: 0.75; }
+
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; }
+  .card-meta { font-size: 10.5px; font-weight: 600; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .card-name { font-size: 15px; font-weight: 700; color: #111827; }
+
+  .score-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: 1.5px solid transparent;
+  }
+  .score-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-RED   { background:#FEF2F2; color:#991B1B; border-color:#FECACA; }
+  .badge-AMBER { background:#FFFBEB; color:#92400E; border-color:#FDE68A; }
+  .badge-GREEN { background:#ECFDF5; color:#065F46; border-color:#A7F3D0; }
+  .badge-DONE  { background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
+  .dot-RED   { background:#EF4444; }
+  .dot-AMBER { background:#F59E0B; }
+  .dot-GREEN { background:#10B981; }
+  .dot-DONE  { background:#3B82F6; }
+
+  .card-preview { font-size: 13px; color: #6B7280; line-height: 1.6; flex: 1; margin-bottom: 16px; }
+
+  .card-btn {
+    width: 100%;
+    padding: 9px;
+    background: #1D4ED8;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s;
+    font-family: inherit;
+  }
+  .card-btn:hover { background: #1E40AF; }
+  .card-btn .material-symbols-outlined { font-size: 15px; }
+
+  /* ── SKELETON ── */
+  .skeleton { background: linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%); background-size:200% 100%; animation: shimmer 1.4s infinite; border-radius:12px; }
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-  .fade-in { animation: fadeIn 0.3s ease both; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── EMPTY ── */
+  .empty { text-align:center; padding:80px 20px; color:#9CA3AF; }
+  .empty .material-symbols-outlined { font-size:48px; display:block; margin-bottom:12px; }
+  .empty p { font-size:14px; margin:4px 0; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(4px);
+    z-index: 50;
+    justify-content: flex-end;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-panel {
+    width: 100%;
+    max-width: 680px;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -8px 0 40px rgba(0,0,0,0.12);
+    animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #F3F4F6;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 10;
+  }
+  .modal-title-group { min-width: 0; }
+  .modal-eyebrow { font-size: 10.5px; font-weight: 600; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+  .modal-title { font-size: 18px; font-weight: 700; color: #111827; }
+  .modal-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn .material-symbols-outlined { font-size: 16px; }
+  .btn-primary { background: #1D4ED8; color: #fff; }
+  .btn-primary:hover { background: #1E40AF; }
+  .btn-secondary { background: #F9FAFB; color: #374151; border: 1px solid #E5E7EB; }
+  .btn-secondary:hover { background: #F3F4F6; }
+  .btn-ghost { background: transparent; color: #9CA3AF; padding: 8px; }
+  .btn-ghost:hover { background: #F9FAFB; color: #374151; }
+  .btn-undone { background: #F3F4F6; color: #6B7280; }
+  .btn-undone:hover { background: #E5E7EB; }
+
+  .modal-body { flex: 1; overflow-y: auto; padding: 24px; }
+
+  .modal-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+  .modal-date { font-size: 12px; color: #9CA3AF; font-weight: 500; }
+
+  /* ── REPORT PROSE ── */
+  .report-prose { font-size: 14px; line-height: 1.7; color: #374151; }
+
+  .report-prose .section-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 28px 0 12px;
+  }
+  .report-prose .section-heading:first-child { margin-top: 0; }
+  .report-prose .section-heading::after { content:''; flex:1; height:1px; background:#F3F4F6; }
+
+  .report-prose p { margin: 0 0 10px; color: #374151; }
+  .report-prose strong { color: #111827; font-weight: 600; }
+
+  .report-prose ul {
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+  }
+  .report-prose ul li {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    color: #374151;
+    align-items: flex-start;
+  }
+  .report-prose ul li::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #9CA3AF;
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+
+  .report-prose ol {
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+    counter-reset: action-counter;
+  }
+  .report-prose ol li {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+    counter-increment: action-counter;
+  }
+  .report-prose ol li::before {
+    content: counter(action-counter);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #1D4ED8;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── NOTES ── */
+  .notes-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid #F3F4F6; }
+  .notes-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .notes-title { font-size:14px; font-weight:700; color:#111827; }
+  .notes-count { font-size:11px; font-weight:600; color:#9CA3AF; background:#F9FAFB; padding:3px 10px; border-radius:999px; }
+  .notes-hint { font-size:12px; color:#9CA3AF; margin-bottom:16px; }
+
+  .note-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .note-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #F3F4F6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .note-avatar .material-symbols-outlined { font-size: 16px; color: #9CA3AF; }
+  .note-body {
+    flex: 1;
+    background: #F9FAFB;
+    border: 1px solid #F3F4F6;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .note-body.done { opacity: 0.55; }
+  .note-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .note-date { font-size:11px; color:#9CA3AF; font-weight:500; }
+  .note-done-btn {
+    display:flex; align-items:center; gap:4px;
+    padding:3px 10px; border-radius:999px;
+    font-size:10.5px; font-weight:700;
+    border:none; cursor:pointer; font-family:inherit;
+    transition:all 0.15s;
+  }
+  .note-done-btn .material-symbols-outlined { font-size:12px; }
+  .note-done-btn.pending { background:#F3F4F6; color:#6B7280; }
+  .note-done-btn.pending:hover { background:#ECFDF5; color:#065F46; }
+  .note-done-btn.resolved { background:#ECFDF5; color:#065F46; }
+  .note-text { font-size:13px; color:#374151; line-height:1.6; }
+  .note-text.done { text-decoration:line-through; color:#9CA3AF; }
+
+  .note-input-wrap {
+    background:#fff;
+    border:1.5px solid #E5E7EB;
+    border-radius:10px;
+    overflow:hidden;
+    transition:border-color 0.15s;
+  }
+  .note-input-wrap:focus-within { border-color:#1D4ED8; }
+  .note-input-wrap textarea {
+    width:100%;
+    border:none;
+    outline:none;
+    padding:14px 16px;
+    font-size:13px;
+    color:#111827;
+    background:transparent;
+    resize:none;
+    min-height:90px;
+    font-family:inherit;
+    line-height:1.6;
+  }
+  .note-input-wrap textarea::placeholder { color:#9CA3AF; }
+  .note-input-footer {
+    padding:10px 12px;
+    background:#F9FAFB;
+    border-top:1px solid #F3F4F6;
+    display:flex;
+    justify-content:flex-end;
+  }
 </style>
 </head>
-<body class="flex min-h-screen">
+<body>
 
-<!-- SIDE NAV -->
-<nav class="h-screen w-64 fixed left-0 top-0 pt-20 bg-slate-50 flex flex-col gap-2 px-4 z-50 border-r border-slate-200">
-  <div class="absolute top-6 left-8">
-    <h1 class="font-extrabold text-blue-700 text-2xl tracking-tight">Signal</h1>
-    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Performance Analytics</p>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Signal</h1>
+    <p>Performance Analytics</p>
   </div>
-  <div class="space-y-1 mt-6">
-    <a class="flex items-center gap-3 px-4 py-2.5 bg-white text-blue-700 shadow-sm rounded-lg text-sm font-medium" href="#">
-      <span class="material-symbols-outlined text-[20px]">dashboard</span><span>Dashboard</span>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" href="#">
+      <span class="material-symbols-outlined">dashboard</span> Dashboard
     </a>
-    <a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 rounded-lg text-sm font-medium" href="#">
-      <span class="material-symbols-outlined text-[20px]">analytics</span><span>Reports</span>
+    <a class="nav-item" href="#">
+      <span class="material-symbols-outlined">analytics</span> Reports
     </a>
-    <a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 rounded-lg text-sm font-medium" href="#">
-      <span class="material-symbols-outlined text-[20px]">settings</span><span>Settings</span>
+    <a class="nav-item" href="#">
+      <span class="material-symbols-outlined">settings</span> Settings
+    </a>
+  </nav>
+  <div style="padding:16px 12px;">
+    <a class="nav-item" href="#">
+      <span class="material-symbols-outlined">help</span> Support
     </a>
   </div>
-  <div class="mt-auto pb-8">
-    <a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 rounded-lg text-sm font-medium" href="#">
-      <span class="material-symbols-outlined text-[20px]">contact_support</span><span>Support</span>
-    </a>
-  </div>
-</nav>
+</aside>
 
 <!-- MAIN -->
-<main class="ml-64 flex-1 p-12 overflow-y-auto">
-
-  <!-- Top bar -->
-  <header class="fixed top-0 right-0 left-64 z-40 bg-white/80 backdrop-blur-xl h-16 border-b border-slate-100 px-8 flex justify-between items-center shadow-sm">
-    <div class="relative flex items-center bg-slate-100 px-4 py-1.5 rounded-lg w-80">
-      <span class="material-symbols-outlined text-slate-400 text-[18px] mr-2">search</span>
-      <input id="search-input" class="bg-transparent border-none text-xs text-slate-900 focus:ring-0 w-full placeholder:text-slate-500" placeholder="Find clients..." type="text"/>
+<div class="main">
+  <div class="topbar">
+    <div class="search-wrap">
+      <span class="material-symbols-outlined">search</span>
+      <input id="search" placeholder="Search clients..." type="text"/>
     </div>
-    <button onclick="loadDashboard()" class="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors" title="Refresh">
-      <span class="material-symbols-outlined">refresh</span>
+    <button class="btn btn-secondary" onclick="loadDashboard()" style="padding:7px 14px;">
+      <span class="material-symbols-outlined" style="font-size:16px;">refresh</span> Refresh
     </button>
-  </header>
-
-  <!-- Page heading -->
-  <div class="mt-12 mb-10">
-    <h2 class="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">Client Performance</h2>
-    <div class="flex items-center gap-3 text-slate-400">
-      <span id="client-count" class="text-xs font-semibold uppercase tracking-wider">Loading...</span>
-      <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
-      <span id="last-updated" class="text-xs font-semibold uppercase tracking-wider"></span>
-    </div>
   </div>
 
-  <!-- Filter pills -->
-  <div class="flex gap-2 mb-8">
-    <button onclick="setFilter('all')"      data-filter="all"      class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-slate-300 bg-white text-slate-700 transition-all">All</button>
-    <button onclick="setFilter('RED')"      data-filter="RED"      class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-red-200 bg-red-50 text-red-700 transition-all">🔴 Needs Action</button>
-    <button onclick="setFilter('AMBER')"    data-filter="AMBER"    class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-yellow-200 bg-yellow-50 text-yellow-700 transition-all">🟡 Watch</button>
-    <button onclick="setFilter('GREEN')"    data-filter="GREEN"    class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-emerald-200 bg-emerald-50 text-emerald-700 transition-all">🟢 Healthy</button>
-    <button onclick="setFilter('actioned')" data-filter="actioned" class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-blue-200 bg-blue-50 text-blue-700 transition-all">✓ Actioned</button>
-  </div>
-
-  <!-- Cards grid -->
-  <section id="cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div class="skeleton h-64"></div>
-    <div class="skeleton h-64"></div>
-    <div class="skeleton h-64"></div>
-  </section>
-
-  <!-- Empty state -->
-  <div id="empty-state" class="hidden text-center py-24">
-    <span class="material-symbols-outlined text-slate-300 text-5xl mb-4 block">inbox</span>
-    <p class="text-slate-500 font-medium">No reports found</p>
-    <p class="text-slate-400 text-sm mt-1">Reports will appear here once the Make scenario runs</p>
-  </div>
-
-  <!-- KPI footer -->
-  <footer id="kpi-footer" class="hidden mt-16 bg-white border border-slate-200 rounded-xl p-10 flex flex-wrap gap-12 shadow-sm">
-    <div>
-      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Total Clients</span>
-      <span id="kpi-total" class="text-4xl font-extrabold text-slate-900">0</span>
-    </div>
-    <div>
-      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">🔴 Needs Action</span>
-      <span id="kpi-red" class="text-4xl font-extrabold text-red-600">0</span>
-    </div>
-    <div>
-      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">🟡 Watch</span>
-      <span id="kpi-amber" class="text-4xl font-extrabold text-yellow-500">0</span>
-    </div>
-    <div>
-      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">🟢 Healthy</span>
-      <span id="kpi-green" class="text-4xl font-extrabold text-emerald-600">0</span>
-    </div>
-    <div>
-      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">✓ Actioned</span>
-      <span id="kpi-actioned" class="text-4xl font-extrabold text-blue-600">0</span>
-    </div>
-  </footer>
-</main>
-
-<!-- REPORT MODAL -->
-<div id="report-modal" class="report-modal fixed inset-0 z-50 bg-black/30 backdrop-blur-sm items-start justify-end">
-  <div class="h-full w-full max-w-3xl bg-white shadow-2xl overflow-y-auto flex flex-col">
-
-    <!-- Modal header -->
-    <div class="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-slate-100 px-8 py-5 flex justify-between items-center z-10">
+  <div class="content">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;">
       <div>
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Performance Report</p>
-        <h2 id="modal-client-name" class="text-xl font-extrabold text-slate-900"></h2>
+        <h2 class="page-title">Client Performance</h2>
+        <p class="page-sub" id="page-sub">Loading...</p>
       </div>
-      <div class="flex items-center gap-3">
-        <button id="btn-action" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-all shadow-md">
-          <span class="material-symbols-outlined text-[18px]">check_circle</span> Mark Actioned
+    </div>
+
+    <!-- KPI ROW -->
+    <div class="kpi-row" id="kpi-row" style="display:none;">
+      <div class="kpi-card kpi-total"><div class="kpi-label">Total</div><div class="kpi-value" id="kpi-total">0</div></div>
+      <div class="kpi-card kpi-red">  <div class="kpi-label">🔴 Needs Action</div><div class="kpi-value" id="kpi-red">0</div></div>
+      <div class="kpi-card kpi-amber"><div class="kpi-label">🟡 Watch</div><div class="kpi-value" id="kpi-amber">0</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-label">🟢 Healthy</div><div class="kpi-value" id="kpi-green">0</div></div>
+      <div class="kpi-card kpi-done"> <div class="kpi-label">✓ Actioned</div><div class="kpi-value" id="kpi-actioned">0</div></div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-row">
+      <button class="pill pill-all active" data-filter="all" onclick="setFilter('all')">All</button>
+      <button class="pill pill-red"   data-filter="RED"      onclick="setFilter('RED')">   <span class="pill-dot dot-RED"></span>   Needs Action</button>
+      <button class="pill pill-amber" data-filter="AMBER"    onclick="setFilter('AMBER')"> <span class="pill-dot dot-AMBER"></span> Watch</button>
+      <button class="pill pill-green" data-filter="GREEN"    onclick="setFilter('GREEN')"> <span class="pill-dot dot-GREEN"></span> Healthy</button>
+      <button class="pill pill-done"  data-filter="actioned" onclick="setFilter('actioned')"><span class="pill-dot dot-DONE"></span> Actioned</button>
+    </div>
+
+    <!-- GRID -->
+    <div class="grid" id="grid">
+      <div class="skeleton" style="height:200px;"></div>
+      <div class="skeleton" style="height:200px;"></div>
+      <div class="skeleton" style="height:200px;"></div>
+    </div>
+
+    <div class="empty" id="empty" style="display:none;">
+      <span class="material-symbols-outlined">inbox</span>
+      <p style="font-weight:600;color:#374151;">No reports found</p>
+      <p>Reports will appear here once the Make scenario runs</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-eyebrow">Performance Report</div>
+        <div class="modal-title" id="modal-title">—</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-action">
+          <span class="material-symbols-outlined">check_circle</span> Mark Actioned
         </button>
-        <button onclick="closeModal()" class="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors">
+        <button class="btn btn-ghost" onclick="closeModal()">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
     </div>
-
-    <!-- Modal body -->
-    <div class="flex-1 px-8 py-8">
-      <!-- Score + date -->
-      <div class="flex items-center gap-3 mb-8">
-        <span id="modal-score-badge" class="px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border w-fit"></span>
-        <span id="modal-date" class="text-xs text-slate-400 font-medium"></span>
+    <div class="modal-body">
+      <div class="modal-meta">
+        <span class="score-badge" id="modal-badge"></span>
+        <span class="modal-date" id="modal-date"></span>
       </div>
-
-      <!-- Report text -->
-      <div id="modal-report-text" class="prose-report mb-12"></div>
-
-      <!-- Notes thread -->
-      <div class="pt-8 border-t border-slate-200">
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-base font-bold text-slate-900">Activity & Notes</h3>
-          <span id="notes-count" class="px-3 py-1 rounded-full bg-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500">0 Notes</span>
+      <div class="report-prose" id="modal-prose"></div>
+      <div class="notes-section">
+        <div class="notes-header">
+          <span class="notes-title">Activity & Notes</span>
+          <span class="notes-count" id="notes-count">0 notes</span>
         </div>
-        <p class="text-xs text-slate-400 mb-4">Notes are included in tomorrow's report so Claude knows what's been done.</p>
-        <div id="notes-list" class="space-y-4 mb-8"></div>
-        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden focus-within:border-blue-400 transition-colors">
-          <textarea id="note-input" class="w-full bg-transparent border-0 focus:ring-0 p-5 text-sm text-slate-800 placeholder-slate-400 min-h-[100px] resize-none" placeholder="What did you action? Notes are fed back into tomorrow's report..."></textarea>
-          <div class="px-4 py-3 bg-slate-50 flex justify-end border-t border-slate-100">
-            <button id="post-note-btn" onclick="postNote()" class="bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all">
-              Post Note
-            </button>
+        <p class="notes-hint">Notes are included in tomorrow's report so Claude knows what's been actioned.</p>
+        <div id="notes-list"></div>
+        <div class="note-input-wrap">
+          <textarea id="note-input" placeholder="What did you action? This will feed into tomorrow's report..."></textarea>
+          <div class="note-input-footer">
+            <button class="btn btn-primary" id="post-btn" onclick="postNote()" style="padding:7px 16px;font-size:12px;">Post Note</button>
           </div>
         </div>
       </div>
@@ -236,334 +582,340 @@
 </div>
 
 <script>
-  const API = '';
-  let allClients = [];
-  let currentFilter = 'all';
-  let currentReportId = null;
+const API = '';
+let clients = [];
+let currentFilter = 'all';
+let currentReportId = null;
 
-  // ── LOAD ────────────────────────────────────────────────────
-  async function loadDashboard() {
-    document.getElementById('client-count').textContent = 'Loading...';
-    document.getElementById('cards-grid').innerHTML =
-      '<div class="skeleton h-64"></div><div class="skeleton h-64"></div><div class="skeleton h-64"></div>';
-    try {
-      const res = await fetch(`${API}/api/reports`);
-      if (!res.ok) throw new Error(`Server returned ${res.status}`);
-      const reports = await res.json();
+// ── LOAD ────────────────────────────────────────────────────────
+async function loadDashboard() {
+  document.getElementById('page-sub').textContent = 'Loading...';
+  document.getElementById('grid').innerHTML =
+    '<div class="skeleton" style="height:200px;"></div>'.repeat(3);
+  document.getElementById('empty').style.display = 'none';
+  document.getElementById('kpi-row').style.display = 'none';
 
-      // Group by client, keep latest
-      const clientMap = {};
-      reports.forEach(r => {
-        if (!clientMap[r.client] || new Date(r.created_at) > new Date(clientMap[r.client].created_at)) {
-          clientMap[r.client] = r;
-        }
-      });
-      allClients = Object.entries(clientMap).map(([client, latestReport]) => ({ client, latestReport }));
-      renderDashboard();
-    } catch(e) {
-      document.getElementById('cards-grid').innerHTML = `
-        <div class="col-span-3 text-center py-16">
-          <span class="material-symbols-outlined text-slate-300 text-4xl block mb-3">cloud_off</span>
-          <p class="text-slate-500 font-medium">Could not connect to server</p>
-          <p class="text-slate-400 text-sm mt-1">${e.message}</p>
-          <button onclick="loadDashboard()" class="mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg">Retry</button>
-        </div>`;
-    }
-  }
+  try {
+    const res = await fetch(`${API}/api/reports`);
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const reports = await res.json();
 
-  // ── RENDER ──────────────────────────────────────────────────
-  function renderDashboard() {
-    const total = allClients.length;
-    const actioned = allClients.filter(c => c.latestReport?.status === 'actioned').length;
-    const red    = allClients.filter(c => c.latestReport?.status !== 'actioned' && (c.latestReport?.score || 'AMBER') === 'RED').length;
-    const amber  = allClients.filter(c => c.latestReport?.status !== 'actioned' && (c.latestReport?.score || 'AMBER') === 'AMBER').length;
-    const green  = allClients.filter(c => c.latestReport?.status !== 'actioned' && (c.latestReport?.score || 'AMBER') === 'GREEN').length;
-
-    document.getElementById('client-count').textContent = `${total} Active Client${total !== 1 ? 's' : ''}`;
-    document.getElementById('last-updated').textContent = `Updated ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
-    document.getElementById('kpi-total').textContent = total;
-    document.getElementById('kpi-red').textContent = red;
-    document.getElementById('kpi-amber').textContent = amber;
-    document.getElementById('kpi-green').textContent = green;
-    document.getElementById('kpi-actioned').textContent = actioned;
-    document.getElementById('kpi-footer').classList.toggle('hidden', total === 0);
-    document.getElementById('empty-state').classList.toggle('hidden', total > 0);
-    renderCards();
-  }
-
-  function renderCards() {
-    const grid = document.getElementById('cards-grid');
-    const search = document.getElementById('search-input').value.toLowerCase();
-
-    const filtered = allClients.filter(c => {
-      const r = c.latestReport;
-      const score = r?.score || 'AMBER';
-      const status = r?.status || 'auto';
-      const isActioned = status === 'actioned';
-
-      let matchFilter = false;
-      if (currentFilter === 'all') matchFilter = true;
-      else if (currentFilter === 'actioned') matchFilter = isActioned;
-      else matchFilter = !isActioned && score === currentFilter;
-
-      return matchFilter && (!search || c.client.toLowerCase().includes(search));
+    // Group by client — latest report per client
+    const map = {};
+    reports.forEach(r => {
+      if (!map[r.client] || new Date(r.created_at) > new Date(map[r.client].created_at)) {
+        map[r.client] = r;
+      }
     });
-
-    if (filtered.length === 0) {
-      grid.innerHTML = '<div class="col-span-3 text-center py-16 text-slate-400 text-sm">No clients match this filter.</div>';
-      return;
-    }
-
-    grid.innerHTML = filtered.map((c, i) => buildCard(c, i)).join('');
-  }
-
-  function buildCard(c, i) {
-    const r = c.latestReport;
-    const score = r?.score || 'AMBER';
-    const isActioned = r?.status === 'actioned';
-    const displayScore = isActioned ? 'ACTIONED' : score;
-    const scoreLabel = isActioned ? '✓ Actioned' : score === 'RED' ? '🔴 Needs Action' : score === 'AMBER' ? '🟡 Watch' : '🟢 Healthy';
-    const preview = r ? stripMarkdown(r.report_text).slice(0, 155) + '...' : 'No report available yet.';
-    const dateStr = r ? fmtDate(r.created_at) : '';
-    const hoverClass = isActioned ? 'hover-blue' : score === 'RED' ? 'hover-red' : score === 'AMBER' ? 'hover-amber' : 'hover-green';
-    const accentRgb = isActioned ? '37,99,235' : score === 'RED' ? '220,38,38' : score === 'AMBER' ? '245,158,11' : '16,185,129';
-
-    return `
-      <div class="fade-in bg-white border border-slate-200 rounded-lg p-8 group ${hoverClass} transition-all duration-300 cursor-pointer"
-           style="animation-delay:${i*60}ms"
-           onclick="openReport('${escAttr(c.client)}', ${r?.id ?? 'null'})">
-        <div class="flex justify-between items-start mb-6">
-          <div class="pr-3 min-w-0">
-            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 block">${dateStr ? 'LAST REPORT: '+dateStr : 'NO REPORTS YET'}</span>
-            <h3 class="text-xl font-bold text-slate-900 truncate">${c.client}</h3>
-          </div>
-          <span class="score-${displayScore} flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border">
-            <span class="w-1.5 h-1.5 rounded-full dot-${displayScore}"></span>${scoreLabel}
-          </span>
-        </div>
-        <div class="space-y-4 mb-8">
-          <div class="h-[2px] w-8 group-hover:w-full transition-all duration-500" style="background:rgba(${accentRgb},0.15)"></div>
-          <p class="text-slate-600 text-sm leading-relaxed">${preview}</p>
-        </div>
-        <button class="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white font-bold text-sm rounded-lg hover:bg-blue-700 transition-all active:scale-[0.98]">
-          Open Report <span class="material-symbols-outlined text-sm">arrow_forward</span>
-        </button>
+    clients = Object.entries(map).map(([client, r]) => ({ client, r }));
+    renderAll();
+  } catch(e) {
+    document.getElementById('grid').innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;">
+        <span class="material-symbols-outlined" style="font-size:40px;color:#D1D5DB;display:block;margin-bottom:12px;">cloud_off</span>
+        <p style="color:#6B7280;font-weight:600;">Could not connect to server</p>
+        <p style="color:#9CA3AF;font-size:13px;margin:4px 0 16px;">${e.message}</p>
+        <button class="btn btn-primary" onclick="loadDashboard()">Retry</button>
       </div>`;
   }
+}
 
-  // ── FILTER ──────────────────────────────────────────────────
-  function setFilter(f) {
-    currentFilter = f;
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.style.opacity = (f === 'all' || btn.dataset.filter === f) ? '1' : '0.4';
-    });
-    renderCards();
-  }
+// ── RENDER ──────────────────────────────────────────────────────
+function renderAll() {
+  const total    = clients.length;
+  const actioned = clients.filter(c => c.r?.status === 'actioned').length;
+  const red      = clients.filter(c => c.r?.status !== 'actioned' && (c.r?.score||'AMBER') === 'RED').length;
+  const amber    = clients.filter(c => c.r?.status !== 'actioned' && (c.r?.score||'AMBER') === 'AMBER').length;
+  const green    = clients.filter(c => c.r?.status !== 'actioned' && (c.r?.score||'AMBER') === 'GREEN').length;
 
-  document.getElementById('search-input').addEventListener('input', renderCards);
+  document.getElementById('page-sub').textContent =
+    `${total} client${total!==1?'s':''} · updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+  document.getElementById('kpi-total').textContent    = total;
+  document.getElementById('kpi-red').textContent      = red;
+  document.getElementById('kpi-amber').textContent    = amber;
+  document.getElementById('kpi-green').textContent    = green;
+  document.getElementById('kpi-actioned').textContent = actioned;
 
-  // ── MODAL ───────────────────────────────────────────────────
-  async function openReport(clientName, reportId) {
-    currentReportId = reportId;
-    document.getElementById('modal-client-name').textContent = clientName;
-    document.getElementById('modal-report-text').innerHTML =
-      '<div class="skeleton h-48 mb-4"></div><div class="skeleton h-32 mb-4"></div><div class="skeleton h-24"></div>';
-    document.getElementById('notes-list').innerHTML = '';
-    document.getElementById('notes-count').textContent = '0 Notes';
-    document.getElementById('report-modal').classList.add('active');
-    document.body.style.overflow = 'hidden';
+  if (total > 0) document.getElementById('kpi-row').style.display = 'flex';
+  renderCards();
+}
 
-    try {
-      let report, messages = [];
+function renderCards() {
+  const grid   = document.getElementById('grid');
+  const search = document.getElementById('search').value.toLowerCase();
 
-      if (reportId) {
-        const res = await fetch(`${API}/api/report/${reportId}`);
-        const data = await res.json();
-        report = data;
-        messages = data.messages || [];
-      } else {
-        const res = await fetch(`${API}/api/reports/${encodeURIComponent(clientName)}`);
-        const reports = await res.json();
-        if (reports?.length > 0) {
-          currentReportId = reports[0].id;
-          const res2 = await fetch(`${API}/api/report/${currentReportId}`);
-          const data = await res2.json();
-          report = data;
-          messages = data.messages || [];
-        }
-      }
-
-      if (!report) {
-        document.getElementById('modal-report-text').innerHTML = '<p class="text-slate-400">No report found.</p>';
-        return;
-      }
-
-      const score = report.score || 'AMBER';
-      const isActioned = report.status === 'actioned';
-      const displayScore = isActioned ? 'ACTIONED' : score;
-      const scoreLabel = isActioned ? '✓ Actioned' : score === 'RED' ? '🔴 Needs Action' : score === 'AMBER' ? '🟡 Watch' : '🟢 Healthy';
-
-      // Score badge
-      const badge = document.getElementById('modal-score-badge');
-      badge.className = `score-${displayScore} px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border w-fit`;
-      badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full dot-${displayScore}"></span>${scoreLabel}`;
-
-      document.getElementById('modal-date').textContent = fmtDate(report.created_at);
-
-      // Action button
-      const btnAction = document.getElementById('btn-action');
-      if (isActioned) {
-        btnAction.innerHTML = '<span class="material-symbols-outlined text-[18px]">undo</span> Unaction';
-        btnAction.onclick = () => updateStatus('auto');
-        btnAction.className = 'flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold text-sm hover:bg-slate-300 transition-all';
-      } else {
-        btnAction.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span> Mark Actioned';
-        btnAction.onclick = () => updateStatus('actioned');
-        btnAction.className = 'flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-all shadow-md';
-      }
-
-      document.getElementById('modal-report-text').innerHTML = renderReportText(report.report_text);
-      renderNotes(messages);
-
-    } catch(e) {
-      document.getElementById('modal-report-text').innerHTML =
-        `<p class="text-red-500 text-sm">Error loading report: ${e.message}</p>`;
-    }
-  }
-
-  function closeModal() {
-    document.getElementById('report-modal').classList.remove('active');
-    document.body.style.overflow = '';
-    currentReportId = null;
-  }
-
-  document.getElementById('report-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
+  const filtered = clients.filter(c => {
+    const score    = c.r?.score || 'AMBER';
+    const actioned = c.r?.status === 'actioned';
+    let match = false;
+    if (currentFilter === 'all')      match = true;
+    else if (currentFilter === 'actioned') match = actioned;
+    else match = !actioned && score === currentFilter;
+    return match && (!search || c.client.toLowerCase().includes(search));
   });
 
-  // ── STATUS ──────────────────────────────────────────────────
-  async function updateStatus(newStatus) {
-    if (!currentReportId) return;
-    try {
-      const res = await fetch(`${API}/api/report/${currentReportId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus, reason: `Manually set to ${newStatus}` })
-      });
-      if (!res.ok) throw new Error('Update failed');
-      closeModal();
-      loadDashboard();
-    } catch(e) {
-      alert('Failed to update status: ' + e.message);
-    }
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    document.getElementById('empty').style.display = 'block';
+    return;
   }
+  document.getElementById('empty').style.display = 'none';
 
-  // ── NOTES ───────────────────────────────────────────────────
-  function renderNotes(messages) {
-    const list = document.getElementById('notes-list');
-    document.getElementById('notes-count').textContent = `${messages.length} Note${messages.length !== 1 ? 's' : ''}`;
-    if (messages.length === 0) {
-      list.innerHTML = '<p class="text-sm text-slate-400 italic">No notes yet.</p>';
+  grid.innerHTML = filtered.map((c, i) => {
+    const r        = c.r;
+    const score    = r?.score || 'AMBER';
+    const actioned = r?.status === 'actioned';
+    const dispScore = actioned ? 'DONE' : score;
+    const label    = actioned ? '✓ Actioned' : score === 'RED' ? 'Needs Action' : score === 'AMBER' ? 'Watch' : 'Healthy';
+    const cardCls  = actioned ? 'card-done' : `card-${score.toLowerCase()}`;
+    const preview  = r ? strip(r.report_text).slice(0,140)+'…' : 'No report yet.';
+    const date     = r ? fmt(r.created_at) : '';
+    return `
+      <div class="card ${cardCls}" style="animation-delay:${i*50}ms" onclick="openReport('${esc(c.client)}',${r?.id??'null'})">
+        <div class="card-header">
+          <div>
+            <div class="card-meta">${date ? 'Last report: '+date : 'No reports yet'}</div>
+            <div class="card-name">${c.client}</div>
+          </div>
+          <span class="score-badge badge-${dispScore}">
+            <span class="dot dot-${dispScore}"></span>${label}
+          </span>
+        </div>
+        <p class="card-preview">${preview}</p>
+        <button class="card-btn">Open Report <span class="material-symbols-outlined">arrow_forward</span></button>
+      </div>`;
+  }).join('');
+}
+
+// ── FILTER ──────────────────────────────────────────────────────
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.filter === f);
+  });
+  renderCards();
+}
+document.getElementById('search').addEventListener('input', renderCards);
+
+// ── MODAL ───────────────────────────────────────────────────────
+async function openReport(clientName, reportId) {
+  currentReportId = reportId;
+  document.getElementById('modal-title').textContent = clientName;
+  document.getElementById('modal-prose').innerHTML =
+    '<div class="skeleton" style="height:40px;margin-bottom:12px;"></div>'.repeat(4);
+  document.getElementById('notes-list').innerHTML = '';
+  document.getElementById('notes-count').textContent = '0 notes';
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  try {
+    let report, messages = [];
+
+    if (reportId) {
+      const d = await (await fetch(`${API}/api/report/${reportId}`)).json();
+      report = d; messages = d.messages || [];
+    } else {
+      const list = await (await fetch(`${API}/api/reports/${encodeURIComponent(clientName)}`)).json();
+      if (list?.length) {
+        currentReportId = list[0].id;
+        const d = await (await fetch(`${API}/api/report/${currentReportId}`)).json();
+        report = d; messages = d.messages || [];
+      }
+    }
+
+    if (!report) {
+      document.getElementById('modal-prose').innerHTML = '<p style="color:#9CA3AF;">No report found.</p>';
       return;
     }
-    list.innerHTML = messages.map(m => `
-      <div class="flex gap-4 ${m.done ? 'opacity-50' : ''}">
-        <div class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <span class="material-symbols-outlined text-slate-400 text-[18px]">person</span>
-        </div>
-        <div class="flex-1 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <div class="flex justify-between items-center mb-2">
-            <p class="text-xs font-semibold text-slate-400">${fmtDate(m.created_at)}</p>
-            <button onclick="toggleDone(${m.id})" class="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${m.done ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 hover:bg-emerald-50 hover:text-emerald-700'}">
-              <span class="material-symbols-outlined text-[12px]">${m.done ? 'task_alt' : 'check'}</span>
-              ${m.done ? 'Resolved' : 'Mark Resolved'}
-            </button>
-          </div>
-          <p class="text-sm text-slate-600 leading-relaxed ${m.done ? 'line-through text-slate-400' : ''}">${escHtml(m.message)}</p>
-        </div>
-      </div>`).join('');
-  }
 
-  async function postNote() {
-    const input = document.getElementById('note-input');
-    const btn = document.getElementById('post-note-btn');
-    const message = input.value.trim();
-    if (!message || !currentReportId) return;
-    btn.textContent = 'Posting...';
-    btn.disabled = true;
-    try {
-      await fetch(`${API}/api/context`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ report_id: currentReportId, message, is_action: false })
-      });
-      input.value = '';
-      const res = await fetch(`${API}/api/report/${currentReportId}`);
-      const data = await res.json();
-      renderNotes(data.messages || []);
-      loadDashboard();
-    } catch(e) {
-      alert('Failed to post note: ' + e.message);
-    } finally {
-      btn.textContent = 'Post Note';
-      btn.disabled = false;
+    const score    = report.score || 'AMBER';
+    const actioned = report.status === 'actioned';
+    const dispScore = actioned ? 'DONE' : score;
+    const label    = actioned ? '✓ Actioned' : score === 'RED' ? 'Needs Action' : score === 'AMBER' ? 'Watch' : 'Healthy';
+
+    // Badge
+    const badge = document.getElementById('modal-badge');
+    badge.className = `score-badge badge-${dispScore}`;
+    badge.innerHTML = `<span class="dot dot-${dispScore}"></span>${label}`;
+
+    document.getElementById('modal-date').textContent = fmt(report.created_at);
+
+    // Action button
+    const btn = document.getElementById('btn-action');
+    if (actioned) {
+      btn.className = 'btn btn-undone';
+      btn.innerHTML = '<span class="material-symbols-outlined">undo</span> Unaction';
+      btn.onclick = () => updateStatus('auto');
+    } else {
+      btn.className = 'btn btn-primary';
+      btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Mark Actioned';
+      btn.onclick = () => updateStatus('actioned');
     }
+
+    document.getElementById('modal-prose').innerHTML = renderProse(report.report_text);
+    renderNotes(messages);
+
+  } catch(e) {
+    document.getElementById('modal-prose').innerHTML =
+      `<p style="color:#EF4444;font-size:13px;">Error: ${e.message}</p>`;
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+  currentReportId = null;
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+// ── STATUS ──────────────────────────────────────────────────────
+async function updateStatus(newStatus) {
+  if (!currentReportId) return;
+  try {
+    const res = await fetch(`${API}/api/report/${currentReportId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus, reason: `Set to ${newStatus}` })
+    });
+    if (!res.ok) throw new Error('Failed');
+    closeModal();
+    loadDashboard();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// ── NOTES ───────────────────────────────────────────────────────
+function renderNotes(messages) {
+  const list = document.getElementById('notes-list');
+  document.getElementById('notes-count').textContent = `${messages.length} note${messages.length!==1?'s':''}`;
+  if (!messages.length) {
+    list.innerHTML = '<p style="font-size:13px;color:#9CA3AF;font-style:italic;margin-bottom:16px;">No notes yet.</p>';
+    return;
+  }
+  list.innerHTML = messages.map(m => `
+    <div class="note-item">
+      <div class="note-avatar"><span class="material-symbols-outlined">person</span></div>
+      <div class="note-body${m.done?' done':''}">
+        <div class="note-top">
+          <span class="note-date">${fmt(m.created_at)}</span>
+          <button class="note-done-btn ${m.done?'resolved':'pending'}" onclick="toggleDone(${m.id})">
+            <span class="material-symbols-outlined">${m.done?'task_alt':'check_circle'}</span>
+            ${m.done?'Resolved':'Mark Resolved'}
+          </button>
+        </div>
+        <p class="note-text${m.done?' done':''}">${escHtml(m.message)}</p>
+      </div>
+    </div>`).join('');
+}
+
+async function postNote() {
+  const input = document.getElementById('note-input');
+  const btn   = document.getElementById('post-btn');
+  const msg   = input.value.trim();
+  if (!msg || !currentReportId) return;
+  btn.textContent = 'Posting...';
+  btn.disabled = true;
+  try {
+    await fetch(`${API}/api/context`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_id: currentReportId, message: msg, is_action: false })
+    });
+    input.value = '';
+    const d = await (await fetch(`${API}/api/report/${currentReportId}`)).json();
+    renderNotes(d.messages || []);
+    loadDashboard();
+  } catch(e) { alert('Error: ' + e.message); }
+  finally { btn.innerHTML = 'Post Note'; btn.disabled = false; }
+}
+
+async function toggleDone(noteId) {
+  try {
+    await fetch(`${API}/api/context/${noteId}/done`, { method: 'PATCH' });
+    const d = await (await fetch(`${API}/api/report/${currentReportId}`)).json();
+    renderNotes(d.messages || []);
+  } catch(e) {}
+}
+
+// ── PROSE RENDERER ───────────────────────────────────────────────
+function renderProse(text) {
+  if (!text) return '<p style="color:#9CA3AF;">No content.</p>';
+
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  let html = '';
+  let listType = null; // 'ul' or 'ol'
+
+  const closeList = () => {
+    if (listType) { html += `</${listType}>`; listType = null; }
+  };
+
+  const inline = t => t
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw  = lines[i];
+    const line = raw.trim();
+
+    if (!line) {
+      closeList();
+      continue;
+    }
+
+    // Section heading ## or ###
+    if (/^#{1,3} /.test(line)) {
+      closeList();
+      const heading = line.replace(/^#{1,3} /, '');
+      html += `<div class="section-heading">${heading}</div>`;
+      continue;
+    }
+
+    // Numbered list: "1. " or "1) "
+    if (/^\d+[\.\)] /.test(line)) {
+      if (listType !== 'ol') { closeList(); html += '<ol>'; listType = 'ol'; }
+      const content = line.replace(/^\d+[\.\)] /, '');
+      html += `<li>${inline(content)}</li>`;
+      continue;
+    }
+
+    // Bullet list: "- " or "* "
+    if (/^[\-\*] /.test(line)) {
+      if (listType !== 'ul') { closeList(); html += '<ul>'; listType = 'ul'; }
+      const content = line.replace(/^[\-\*] /, '');
+      html += `<li>${inline(content)}</li>`;
+      continue;
+    }
+
+    // Regular paragraph
+    closeList();
+    html += `<p>${inline(line)}</p>`;
   }
 
-  async function toggleDone(noteId) {
-    try {
-      await fetch(`${API}/api/context/${noteId}/done`, { method: 'PATCH' });
-      const res = await fetch(`${API}/api/report/${currentReportId}`);
-      const data = await res.json();
-      renderNotes(data.messages || []);
-    } catch(e) {}
-  }
+  closeList();
+  return html;
+}
 
-  // ── HELPERS ─────────────────────────────────────────────────
-  function renderReportText(text) {
-    if (!text) return '<p class="text-slate-400">No content.</p>';
-    return text
-      .replace(/^#{1,3} (.+)$/gm, '<h2>$1</h2>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/^[\-\*] (.+)$/gm, '<li>$1</li>')
-      .replace(/(<li>[\s\S]+?<\/li>)(?=\n|$)/g, '<ul>$1</ul>')
-      .split(/\n{2,}/)
-      .map(block => {
-        block = block.trim();
-        if (!block) return '';
-        if (block.startsWith('<h2>') || block.startsWith('<ul>')) return block;
-        return `<p>${block.replace(/\n/g, ' ')}</p>`;
-      })
-      .join('\n');
-  }
+// ── HELPERS ──────────────────────────────────────────────────────
+function strip(t) {
+  if (!t) return '';
+  return t.replace(/^#{1,6} /gm,'').replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1').replace(/^[\-\*\d\.] /gm,'').replace(/\n+/g,' ').trim();
+}
 
-  function stripMarkdown(text) {
-    if (!text) return '';
-    return text
-      .replace(/^#{1,6} /gm, '')
-      .replace(/\*\*(.+?)\*\*/g, '$1')
-      .replace(/\*(.+?)\*/g, '$1')
-      .replace(/^[\-\*] /gm, '')
-      .replace(/\n+/g, ' ')
-      .trim();
-  }
+function fmt(s) {
+  if (!s) return '';
+  try { return new Date(s).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+  catch(e){ return s; }
+}
 
-  function fmtDate(str) {
-    if (!str) return '';
-    try { return new Date(str).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}); }
-    catch(e) { return str; }
-  }
+function esc(s) { return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
-  function escAttr(str) {
-    return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  }
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-  function escHtml(str) {
-    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  loadDashboard();
+loadDashboard();
 </script>
 </body>
 </html>
