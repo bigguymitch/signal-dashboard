@@ -12,24 +12,12 @@
     darkMode: "class",
     theme: {
       extend: {
-        colors: {
-          "primary": "#007BFF",
-          "surface": "#FFFFFF",
-          "background": "#F8FAFC",
-          "outline": "#E2E8F0",
-          "on-surface": "#0F172A",
-          "error": "#DC2626",
-          "success": "#10B981"
-        },
         fontFamily: {
           "headline": ["Manrope", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
           "body": ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
         },
         borderRadius: {
-          "DEFAULT": "0.5rem",
-          "lg": "0.75rem",
-          "xl": "1rem",
-          "full": "9999px"
+          "DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"
         },
       },
     },
@@ -45,20 +33,33 @@
     color: #0F172A;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
-  h1, h2, h3, .font-headline {
+  h1, h2, h3 {
     font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
+
+  /* Modal */
   .report-modal { display: none; }
   .report-modal.active { display: flex; }
-  .status-auto     { background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
-  .status-actioned { background:#ECFDF5; color:#065F46; border-color:#A7F3D0; }
-  .status-flagged  { background:#FEF2F2; color:#991B1B; border-color:#FECACA; }
-  .dot-auto     { background:#2563EB; }
-  .dot-actioned { background:#059669; }
-  .dot-flagged  { background:#DC2626; }
-  .hover-blue:hover  { box-shadow: 0 12px 24px rgba(0,123,255,0.08); }
-  .hover-green:hover { box-shadow: 0 12px 24px rgba(16,185,129,0.08); }
-  .hover-red:hover   { box-shadow: 0 12px 24px rgba(220,38,38,0.08); }
+
+  /* Score badges */
+  .score-RED    { background:#FEF2F2; color:#991B1B; border-color:#FECACA; }
+  .score-AMBER  { background:#FFFBEB; color:#92400E; border-color:#FDE68A; }
+  .score-GREEN  { background:#ECFDF5; color:#065F46; border-color:#A7F3D0; }
+  .dot-RED      { background:#DC2626; }
+  .dot-AMBER    { background:#F59E0B; }
+  .dot-GREEN    { background:#059669; }
+
+  /* Actioned overrides card to blue */
+  .score-ACTIONED { background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
+  .dot-ACTIONED   { background:#2563EB; }
+
+  /* Card hover */
+  .hover-red:hover    { box-shadow: 0 12px 24px rgba(220,38,38,0.10); border-color:#FECACA; }
+  .hover-amber:hover  { box-shadow: 0 12px 24px rgba(245,158,11,0.10); border-color:#FDE68A; }
+  .hover-green:hover  { box-shadow: 0 12px 24px rgba(16,185,129,0.10); border-color:#A7F3D0; }
+  .hover-blue:hover   { box-shadow: 0 12px 24px rgba(37,99,235,0.10); border-color:#BFDBFE; }
+
+  /* Report prose */
   .prose-report h2 {
     font-size:0.65rem; font-weight:900; letter-spacing:0.2em;
     color:#94A3B8; text-transform:uppercase;
@@ -71,6 +72,8 @@
   .prose-report strong { color:#0F172A; }
   .prose-report ul { list-style:disc; padding-left:1.5rem; color:#334155; font-size:0.9rem; line-height:1.75; margin-bottom:0.75rem; }
   .prose-report li { margin-bottom:0.25rem; }
+
+  /* Skeleton */
   .skeleton {
     background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
     background-size: 200% 100%;
@@ -110,6 +113,8 @@
 
 <!-- MAIN -->
 <main class="ml-64 flex-1 p-12 overflow-y-auto">
+
+  <!-- Top bar -->
   <header class="fixed top-0 right-0 left-64 z-40 bg-white/80 backdrop-blur-xl h-16 border-b border-slate-100 px-8 flex justify-between items-center shadow-sm">
     <div class="relative flex items-center bg-slate-100 px-4 py-1.5 rounded-lg w-80">
       <span class="material-symbols-outlined text-slate-400 text-[18px] mr-2">search</span>
@@ -120,6 +125,7 @@
     </button>
   </header>
 
+  <!-- Page heading -->
   <div class="mt-12 mb-10">
     <h2 class="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">Client Performance</h2>
     <div class="flex items-center gap-3 text-slate-400">
@@ -129,41 +135,50 @@
     </div>
   </div>
 
+  <!-- Filter pills -->
   <div class="flex gap-2 mb-8">
     <button onclick="setFilter('all')"      data-filter="all"      class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-slate-300 bg-white text-slate-700 transition-all">All</button>
-    <button onclick="setFilter('auto')"     data-filter="auto"     class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-blue-200 bg-blue-50 text-blue-600 transition-all">Auto</button>
-    <button onclick="setFilter('actioned')" data-filter="actioned" class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-emerald-200 bg-emerald-50 text-emerald-600 transition-all">Actioned</button>
-    <button onclick="setFilter('flagged')"  data-filter="flagged"  class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-red-200 bg-red-50 text-red-600 transition-all">Flagged</button>
+    <button onclick="setFilter('RED')"      data-filter="RED"      class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-red-200 bg-red-50 text-red-700 transition-all">🔴 Needs Action</button>
+    <button onclick="setFilter('AMBER')"    data-filter="AMBER"    class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-yellow-200 bg-yellow-50 text-yellow-700 transition-all">🟡 Watch</button>
+    <button onclick="setFilter('GREEN')"    data-filter="GREEN"    class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-emerald-200 bg-emerald-50 text-emerald-700 transition-all">🟢 Healthy</button>
+    <button onclick="setFilter('actioned')" data-filter="actioned" class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold border border-blue-200 bg-blue-50 text-blue-700 transition-all">✓ Actioned</button>
   </div>
 
+  <!-- Cards grid -->
   <section id="cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <div class="skeleton h-64"></div>
     <div class="skeleton h-64"></div>
     <div class="skeleton h-64"></div>
   </section>
 
+  <!-- Empty state -->
   <div id="empty-state" class="hidden text-center py-24">
     <span class="material-symbols-outlined text-slate-300 text-5xl mb-4 block">inbox</span>
     <p class="text-slate-500 font-medium">No reports found</p>
     <p class="text-slate-400 text-sm mt-1">Reports will appear here once the Make scenario runs</p>
   </div>
 
-  <footer id="kpi-footer" class="hidden mt-16 bg-white border border-slate-200 rounded-xl p-10 flex flex-wrap gap-16 shadow-sm">
+  <!-- KPI footer -->
+  <footer id="kpi-footer" class="hidden mt-16 bg-white border border-slate-200 rounded-xl p-10 flex flex-wrap gap-12 shadow-sm">
     <div>
       <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Total Clients</span>
       <span id="kpi-total" class="text-4xl font-extrabold text-slate-900">0</span>
     </div>
     <div>
-      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Pending Review</span>
-      <span id="kpi-auto" class="text-4xl font-extrabold text-blue-600">0</span>
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">🔴 Needs Action</span>
+      <span id="kpi-red" class="text-4xl font-extrabold text-red-600">0</span>
     </div>
     <div>
-      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Actioned</span>
-      <span id="kpi-actioned" class="text-4xl font-extrabold text-emerald-600">0</span>
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">🟡 Watch</span>
+      <span id="kpi-amber" class="text-4xl font-extrabold text-yellow-500">0</span>
     </div>
     <div>
-      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Flagged</span>
-      <span id="kpi-flagged" class="text-4xl font-extrabold text-red-600">0</span>
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">🟢 Healthy</span>
+      <span id="kpi-green" class="text-4xl font-extrabold text-emerald-600">0</span>
+    </div>
+    <div>
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">✓ Actioned</span>
+      <span id="kpi-actioned" class="text-4xl font-extrabold text-blue-600">0</span>
     </div>
   </footer>
 </main>
@@ -171,15 +186,14 @@
 <!-- REPORT MODAL -->
 <div id="report-modal" class="report-modal fixed inset-0 z-50 bg-black/30 backdrop-blur-sm items-start justify-end">
   <div class="h-full w-full max-w-3xl bg-white shadow-2xl overflow-y-auto flex flex-col">
+
+    <!-- Modal header -->
     <div class="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-slate-100 px-8 py-5 flex justify-between items-center z-10">
       <div>
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Performance Report</p>
         <h2 id="modal-client-name" class="text-xl font-extrabold text-slate-900"></h2>
       </div>
       <div class="flex items-center gap-3">
-        <button id="btn-flag" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg font-bold text-sm hover:border-red-300 hover:text-red-600 transition-all">
-          <span class="material-symbols-outlined text-[18px]">flag</span> Flag
-        </button>
         <button id="btn-action" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-all shadow-md">
           <span class="material-symbols-outlined text-[18px]">check_circle</span> Mark Actioned
         </button>
@@ -189,21 +203,27 @@
       </div>
     </div>
 
+    <!-- Modal body -->
     <div class="flex-1 px-8 py-8">
+      <!-- Score + date -->
       <div class="flex items-center gap-3 mb-8">
-        <span id="modal-status-badge" class="px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border w-fit"></span>
+        <span id="modal-score-badge" class="px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border w-fit"></span>
         <span id="modal-date" class="text-xs text-slate-400 font-medium"></span>
       </div>
+
+      <!-- Report text -->
       <div id="modal-report-text" class="prose-report mb-12"></div>
 
+      <!-- Notes thread -->
       <div class="pt-8 border-t border-slate-200">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-base font-bold text-slate-900">Activity & Notes</h3>
           <span id="notes-count" class="px-3 py-1 rounded-full bg-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500">0 Notes</span>
         </div>
+        <p class="text-xs text-slate-400 mb-4">Notes are included in tomorrow's report so Claude knows what's been done.</p>
         <div id="notes-list" class="space-y-4 mb-8"></div>
         <div class="bg-white border border-slate-200 rounded-xl overflow-hidden focus-within:border-blue-400 transition-colors">
-          <textarea id="note-input" class="w-full bg-transparent border-0 focus:ring-0 p-5 text-sm text-slate-800 placeholder-slate-400 min-h-[100px] resize-none" placeholder="Add a note for the management team..."></textarea>
+          <textarea id="note-input" class="w-full bg-transparent border-0 focus:ring-0 p-5 text-sm text-slate-800 placeholder-slate-400 min-h-[100px] resize-none" placeholder="What did you action? Notes are fed back into tomorrow's report..."></textarea>
           <div class="px-4 py-3 bg-slate-50 flex justify-end border-t border-slate-100">
             <button id="post-note-btn" onclick="postNote()" class="bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all">
               Post Note
@@ -221,6 +241,7 @@
   let currentFilter = 'all';
   let currentReportId = null;
 
+  // ── LOAD ────────────────────────────────────────────────────
   async function loadDashboard() {
     document.getElementById('client-count').textContent = 'Loading...';
     document.getElementById('cards-grid').innerHTML =
@@ -229,6 +250,8 @@
       const res = await fetch(`${API}/api/reports`);
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const reports = await res.json();
+
+      // Group by client, keep latest
       const clientMap = {};
       reports.forEach(r => {
         if (!clientMap[r.client] || new Date(r.created_at) > new Date(clientMap[r.client].created_at)) {
@@ -248,15 +271,21 @@
     }
   }
 
+  // ── RENDER ──────────────────────────────────────────────────
   function renderDashboard() {
     const total = allClients.length;
-    const statuses = allClients.map(c => c.latestReport?.status || 'auto');
+    const actioned = allClients.filter(c => c.latestReport?.status === 'actioned').length;
+    const red    = allClients.filter(c => c.latestReport?.status !== 'actioned' && (c.latestReport?.score || 'AMBER') === 'RED').length;
+    const amber  = allClients.filter(c => c.latestReport?.status !== 'actioned' && (c.latestReport?.score || 'AMBER') === 'AMBER').length;
+    const green  = allClients.filter(c => c.latestReport?.status !== 'actioned' && (c.latestReport?.score || 'AMBER') === 'GREEN').length;
+
     document.getElementById('client-count').textContent = `${total} Active Client${total !== 1 ? 's' : ''}`;
     document.getElementById('last-updated').textContent = `Updated ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
     document.getElementById('kpi-total').textContent = total;
-    document.getElementById('kpi-auto').textContent = statuses.filter(s => s === 'auto').length;
-    document.getElementById('kpi-actioned').textContent = statuses.filter(s => s === 'actioned').length;
-    document.getElementById('kpi-flagged').textContent = statuses.filter(s => s === 'flagged').length;
+    document.getElementById('kpi-red').textContent = red;
+    document.getElementById('kpi-amber').textContent = amber;
+    document.getElementById('kpi-green').textContent = green;
+    document.getElementById('kpi-actioned').textContent = actioned;
     document.getElementById('kpi-footer').classList.toggle('hidden', total === 0);
     document.getElementById('empty-state').classList.toggle('hidden', total > 0);
     renderCards();
@@ -265,26 +294,40 @@
   function renderCards() {
     const grid = document.getElementById('cards-grid');
     const search = document.getElementById('search-input').value.toLowerCase();
+
     const filtered = allClients.filter(c => {
-      const status = c.latestReport?.status || 'auto';
-      return (currentFilter === 'all' || status === currentFilter) &&
-             (!search || c.client.toLowerCase().includes(search));
+      const r = c.latestReport;
+      const score = r?.score || 'AMBER';
+      const status = r?.status || 'auto';
+      const isActioned = status === 'actioned';
+
+      let matchFilter = false;
+      if (currentFilter === 'all') matchFilter = true;
+      else if (currentFilter === 'actioned') matchFilter = isActioned;
+      else matchFilter = !isActioned && score === currentFilter;
+
+      return matchFilter && (!search || c.client.toLowerCase().includes(search));
     });
+
     if (filtered.length === 0) {
       grid.innerHTML = '<div class="col-span-3 text-center py-16 text-slate-400 text-sm">No clients match this filter.</div>';
       return;
     }
+
     grid.innerHTML = filtered.map((c, i) => buildCard(c, i)).join('');
   }
 
   function buildCard(c, i) {
     const r = c.latestReport;
-    const status = r?.status || 'auto';
-    const label = status.charAt(0).toUpperCase() + status.slice(1);
+    const score = r?.score || 'AMBER';
+    const isActioned = r?.status === 'actioned';
+    const displayScore = isActioned ? 'ACTIONED' : score;
+    const scoreLabel = isActioned ? '✓ Actioned' : score === 'RED' ? '🔴 Needs Action' : score === 'AMBER' ? '🟡 Watch' : '🟢 Healthy';
     const preview = r ? stripMarkdown(r.report_text).slice(0, 155) + '...' : 'No report available yet.';
     const dateStr = r ? fmtDate(r.created_at) : '';
-    const hoverClass = status === 'flagged' ? 'hover-red' : status === 'actioned' ? 'hover-green' : 'hover-blue';
-    const accentRgb = status === 'flagged' ? '220,38,38' : status === 'actioned' ? '16,185,129' : '37,99,235';
+    const hoverClass = isActioned ? 'hover-blue' : score === 'RED' ? 'hover-red' : score === 'AMBER' ? 'hover-amber' : 'hover-green';
+    const accentRgb = isActioned ? '37,99,235' : score === 'RED' ? '220,38,38' : score === 'AMBER' ? '245,158,11' : '16,185,129';
+
     return `
       <div class="fade-in bg-white border border-slate-200 rounded-lg p-8 group ${hoverClass} transition-all duration-300 cursor-pointer"
            style="animation-delay:${i*60}ms"
@@ -294,8 +337,8 @@
             <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 block">${dateStr ? 'LAST REPORT: '+dateStr : 'NO REPORTS YET'}</span>
             <h3 class="text-xl font-bold text-slate-900 truncate">${c.client}</h3>
           </div>
-          <span class="status-${status} flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border">
-            <span class="w-1.5 h-1.5 rounded-full dot-${status}"></span>${label}
+          <span class="score-${displayScore} flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border">
+            <span class="w-1.5 h-1.5 rounded-full dot-${displayScore}"></span>${scoreLabel}
           </span>
         </div>
         <div class="space-y-4 mb-8">
@@ -303,21 +346,23 @@
           <p class="text-slate-600 text-sm leading-relaxed">${preview}</p>
         </div>
         <button class="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white font-bold text-sm rounded-lg hover:bg-blue-700 transition-all active:scale-[0.98]">
-          Open Full Report <span class="material-symbols-outlined text-sm">arrow_forward</span>
+          Open Report <span class="material-symbols-outlined text-sm">arrow_forward</span>
         </button>
       </div>`;
   }
 
+  // ── FILTER ──────────────────────────────────────────────────
   function setFilter(f) {
     currentFilter = f;
     document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.style.opacity = (f === 'all' || btn.dataset.filter === f) ? '1' : '0.45';
+      btn.style.opacity = (f === 'all' || btn.dataset.filter === f) ? '1' : '0.4';
     });
     renderCards();
   }
 
   document.getElementById('search-input').addEventListener('input', renderCards);
 
+  // ── MODAL ───────────────────────────────────────────────────
   async function openReport(clientName, reportId) {
     currentReportId = reportId;
     document.getElementById('modal-client-name').textContent = clientName;
@@ -330,6 +375,7 @@
 
     try {
       let report, messages = [];
+
       if (reportId) {
         const res = await fetch(`${API}/api/report/${reportId}`);
         const data = await res.json();
@@ -352,22 +398,29 @@
         return;
       }
 
-      const status = report.status || 'auto';
-      const badge = document.getElementById('modal-status-badge');
-      badge.className = `status-${status} px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border w-fit`;
-      badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full dot-${status}"></span>${status.charAt(0).toUpperCase()+status.slice(1)}`;
+      const score = report.score || 'AMBER';
+      const isActioned = report.status === 'actioned';
+      const displayScore = isActioned ? 'ACTIONED' : score;
+      const scoreLabel = isActioned ? '✓ Actioned' : score === 'RED' ? '🔴 Needs Action' : score === 'AMBER' ? '🟡 Watch' : '🟢 Healthy';
+
+      // Score badge
+      const badge = document.getElementById('modal-score-badge');
+      badge.className = `score-${displayScore} px-3 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 border w-fit`;
+      badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full dot-${displayScore}"></span>${scoreLabel}`;
+
       document.getElementById('modal-date').textContent = fmtDate(report.created_at);
 
+      // Action button
       const btnAction = document.getElementById('btn-action');
-      const btnFlag = document.getElementById('btn-flag');
-      btnFlag.onclick = () => updateStatus(status === 'flagged' ? 'auto' : 'flagged');
-      btnFlag.innerHTML = status === 'flagged'
-        ? '<span class="material-symbols-outlined text-[18px]">undo</span> Unflag'
-        : '<span class="material-symbols-outlined text-[18px]">flag</span> Flag';
-      btnAction.onclick = () => updateStatus(status === 'actioned' ? 'auto' : 'actioned');
-      btnAction.innerHTML = status === 'actioned'
-        ? '<span class="material-symbols-outlined text-[18px]">undo</span> Unaction'
-        : '<span class="material-symbols-outlined text-[18px]">check_circle</span> Mark Actioned';
+      if (isActioned) {
+        btnAction.innerHTML = '<span class="material-symbols-outlined text-[18px]">undo</span> Unaction';
+        btnAction.onclick = () => updateStatus('auto');
+        btnAction.className = 'flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold text-sm hover:bg-slate-300 transition-all';
+      } else {
+        btnAction.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span> Mark Actioned';
+        btnAction.onclick = () => updateStatus('actioned');
+        btnAction.className = 'flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-all shadow-md';
+      }
 
       document.getElementById('modal-report-text').innerHTML = renderReportText(report.report_text);
       renderNotes(messages);
@@ -388,6 +441,7 @@
     if (e.target === this) closeModal();
   });
 
+  // ── STATUS ──────────────────────────────────────────────────
   async function updateStatus(newStatus) {
     if (!currentReportId) return;
     try {
@@ -404,6 +458,7 @@
     }
   }
 
+  // ── NOTES ───────────────────────────────────────────────────
   function renderNotes(messages) {
     const list = document.getElementById('notes-list');
     document.getElementById('notes-count').textContent = `${messages.length} Note${messages.length !== 1 ? 's' : ''}`;
@@ -412,7 +467,7 @@
       return;
     }
     list.innerHTML = messages.map(m => `
-      <div class="flex gap-4 ${m.done ? 'opacity-55' : ''}">
+      <div class="flex gap-4 ${m.done ? 'opacity-50' : ''}">
         <div class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
           <span class="material-symbols-outlined text-slate-400 text-[18px]">person</span>
         </div>
@@ -421,7 +476,7 @@
             <p class="text-xs font-semibold text-slate-400">${fmtDate(m.created_at)}</p>
             <button onclick="toggleDone(${m.id})" class="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${m.done ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 hover:bg-emerald-50 hover:text-emerald-700'}">
               <span class="material-symbols-outlined text-[12px]">${m.done ? 'task_alt' : 'check'}</span>
-              ${m.done ? 'Done' : 'Mark Done'}
+              ${m.done ? 'Resolved' : 'Mark Resolved'}
             </button>
           </div>
           <p class="text-sm text-slate-600 leading-relaxed ${m.done ? 'line-through text-slate-400' : ''}">${escHtml(m.message)}</p>
@@ -464,6 +519,7 @@
     } catch(e) {}
   }
 
+  // ── HELPERS ─────────────────────────────────────────────────
   function renderReportText(text) {
     if (!text) return '<p class="text-slate-400">No content.</p>';
     return text
