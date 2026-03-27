@@ -17,6 +17,7 @@ db.exec(`
     client TEXT NOT NULL,
     report_text TEXT NOT NULL,
     status TEXT DEFAULT 'auto',
+    score TEXT DEFAULT 'GREEN',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE TABLE IF NOT EXISTS context_messages (
@@ -39,10 +40,13 @@ db.exec(`
   );
 `);
 
+// Migrations — safe to run every time
 try { db.exec(`ALTER TABLE reports ADD COLUMN status TEXT DEFAULT 'auto'`); } catch(e) {}
+try { db.exec(`ALTER TABLE reports ADD COLUMN score TEXT DEFAULT 'GREEN'`); } catch(e) {}
 try { db.exec(`ALTER TABLE context_messages ADD COLUMN is_action INTEGER DEFAULT 0`); } catch(e) {}
 try { db.exec(`ALTER TABLE context_messages ADD COLUMN done INTEGER DEFAULT 0`); } catch(e) {}
 
+// POST /api/report — receives report from Make, extracts score from text
 app.post('/api/report', (req, res) => {
   let client, report_text;
   if (typeof req.body === 'string') {
@@ -55,11 +59,23 @@ app.post('/api/report', (req, res) => {
   if (!client || !report_text) return res.status(400).json({ error: 'Missing fields' });
   try { report_text = decodeURIComponent(report_text); } catch(e) {}
   report_text = report_text.replace(/\\n/g, '\n');
-  const result = db.prepare('INSERT INTO reports (client, report_text, status) VALUES (?, ?, ?)').run(client, report_text, 'auto');
+
+  // Extract SIGNAL_SCORE from report text then strip it out
+  let score = 'AMBER';
+  const scoreMatch = report_text.match(/^SIGNAL_SCORE:\s*(RED|AMBER|GREEN)\s*\n?/m);
+  if (scoreMatch) {
+    score = scoreMatch[1];
+    report_text = report_text.replace(/^SIGNAL_SCORE:\s*(RED|AMBER|GREEN)\s*\n?/m, '').trim();
+  }
+
+  const result = db.prepare(
+    'INSERT INTO reports (client, report_text, status, score) VALUES (?, ?, ?, ?)'
+  ).run(client, report_text, 'auto', score);
+
   res.json({ id: result.lastInsertRowid });
 });
 
-// Returns latest report per client for the dashboard — sorted flagged first
+// GET /api/reports — latest report per client, sorted RED > AMBER > GREEN > actioned
 app.get('/api/reports', (req, res) => {
   const reports = db.prepare(`
     SELECT r.*
@@ -70,17 +86,14 @@ app.get('/api/reports', (req, res) => {
       GROUP BY client
     ) latest ON r.client = latest.client AND r.created_at = latest.max_created
     ORDER BY
-      CASE r.status
-        WHEN 'flagged' THEN 0
-        WHEN 'auto' THEN 1
-        WHEN 'actioned' THEN 2
-        ELSE 1
-      END,
+      CASE r.status WHEN 'actioned' THEN 1 ELSE 0 END,
+      CASE r.score WHEN 'RED' THEN 0 WHEN 'AMBER' THEN 1 WHEN 'GREEN' THEN 2 ELSE 3 END,
       r.created_at DESC
   `).all();
   res.json(reports);
 });
 
+// GET /api/reports/:client — all reports for a client
 app.get('/api/reports/:client', (req, res) => {
   const reports = db.prepare(`
     SELECT r.*, (SELECT COUNT(*) FROM context_messages WHERE report_id = r.id) as reply_count
@@ -89,6 +102,7 @@ app.get('/api/reports/:client', (req, res) => {
   res.json(reports);
 });
 
+// GET /api/report/:id — single report with messages and history
 app.get('/api/report/:id', (req, res) => {
   const report = db.prepare('SELECT * FROM reports WHERE id = ?').get(req.params.id);
   if (!report) return res.status(404).json({ error: 'Not found' });
@@ -97,6 +111,7 @@ app.get('/api/report/:id', (req, res) => {
   res.json({ ...report, messages, history });
 });
 
+// DELETE /api/report/:id
 app.delete('/api/report/:id', (req, res) => {
   db.prepare('DELETE FROM context_messages WHERE report_id = ?').run(req.params.id);
   db.prepare('DELETE FROM status_history WHERE report_id = ?').run(req.params.id);
@@ -104,10 +119,13 @@ app.delete('/api/report/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /api/context — add a note
 app.post('/api/context', (req, res) => {
   const { report_id, message, is_action } = req.body;
   if (!report_id || !message) return res.status(400).json({ error: 'Missing fields' });
-  const result = db.prepare('INSERT INTO context_messages (report_id, message, is_action) VALUES (?, ?, ?)').run(report_id, message, is_action ? 1 : 0);
+  const result = db.prepare(
+    'INSERT INTO context_messages (report_id, message, is_action) VALUES (?, ?, ?)'
+  ).run(report_id, message, is_action ? 1 : 0);
   const report = db.prepare('SELECT * FROM reports WHERE id = ?').get(report_id);
   if (report && report.status === 'auto') {
     db.prepare('UPDATE reports SET status = ? WHERE id = ?').run('actioned', report_id);
@@ -116,11 +134,13 @@ app.post('/api/context', (req, res) => {
   res.json({ id: result.lastInsertRowid });
 });
 
+// DELETE /api/context/:id
 app.delete('/api/context/:id', (req, res) => {
   db.prepare('DELETE FROM context_messages WHERE id = ?').run(req.params.id);
   res.json({ ok: true });
 });
 
+// PATCH /api/context/:id/done — toggle note done
 app.patch('/api/context/:id/done', (req, res) => {
   const msg = db.prepare('SELECT * FROM context_messages WHERE id = ?').get(req.params.id);
   if (!msg) return res.status(404).json({ error: 'Not found' });
@@ -129,6 +149,7 @@ app.patch('/api/context/:id/done', (req, res) => {
   res.json({ done: newDone });
 });
 
+// PATCH /api/report/:id/status — update status
 app.patch('/api/report/:id/status', (req, res) => {
   const { status, reason } = req.body;
   const report = db.prepare('SELECT * FROM reports WHERE id = ?').get(req.params.id);
@@ -138,6 +159,7 @@ app.patch('/api/report/:id/status', (req, res) => {
   res.json({ ok: true });
 });
 
+// GET /api/clients — distinct client list
 app.get('/api/clients', (req, res) => {
   const clients = db.prepare('SELECT DISTINCT client FROM reports ORDER BY client').all();
   res.json(clients.map(r => r.client));
@@ -146,11 +168,11 @@ app.get('/api/clients', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// GET /api/memory/:client — recent notes and summaries for Claude
+// GET /api/memory/:client — last 4 reports + notes for Claude context
 app.get('/api/memory/:client', (req, res) => {
   const client = decodeURIComponent(req.params.client);
   const reports = db.prepare(`
-    SELECT r.id, r.report_text, r.created_at, r.status
+    SELECT r.id, r.report_text, r.created_at, r.status, r.score
     FROM reports r WHERE r.client = ?
     ORDER BY r.created_at DESC LIMIT 4
   `).all(client);
@@ -159,7 +181,7 @@ app.get('/api/memory/:client', (req, res) => {
   reports.forEach((r, i) => {
     const d = new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
     const notes = db.prepare('SELECT message, done FROM context_messages WHERE report_id = ? ORDER BY created_at ASC').all(r.id);
-    text += `--- Previous Report ${i + 1}: ${d} ---\n`;
+    text += `--- Previous Report ${i + 1}: ${d} (Score: ${r.score || 'AMBER'}) ---\n`;
     text += r.report_text.substring(0, 600) + '...\n';
     if (notes.length) {
       text += `Account manager notes:\n`;
