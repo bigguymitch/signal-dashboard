@@ -5,6 +5,26 @@ const path = require('path');
 
 const app = express();
 app.use(cors());
+// Basic Auth — excludes the Make webhook endpoint
+app.use((req, res, next) => {
+  // Allow Make to post reports without auth
+  if (req.method === 'POST' && req.path === '/api/report') return next();
+  // Allow memory endpoint for Make
+  if (req.path.startsWith('/api/memory/')) return next();
+
+  const auth = req.headers['authorization'];
+  if (!auth || !auth.startsWith('Basic ')) {
+    res.set('WWW-Authenticate', 'Basic realm="Signal Dashboard"');
+    return res.status(401).send('Authentication required');
+  }
+  const credentials = Buffer.from(auth.split(' ')[1], 'base64').toString();
+  const [user, pass] = credentials.split(':');
+  if (user === process.env.DASH_USER && pass === process.env.DASH_PASS) {
+    return next();
+  }
+  res.set('WWW-Authenticate', 'Basic realm="Signal Dashboard"');
+  return res.status(401).send('Invalid credentials');
+});
 app.use(express.json({ limit: '10mb' }));
 app.use(express.text({ limit: '10mb', type: '*/*' }));
 app.use(express.static(path.join(__dirname, 'public')));
