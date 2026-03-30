@@ -1,17 +1,15 @@
 const express = require('express');
 const cors = require('cors');
-const Database = require('better-sqlite3');
 const path = require('path');
+const { Pool } = require('pg');
 
 const app = express();
 app.use(cors());
-// Basic Auth — excludes the Make webhook endpoint
-app.use((req, res, next) => {
-  // Allow Make to post reports without auth
-  if (req.method === 'POST' && req.path === '/api/report') return next();
-  // Allow memory endpoint for Make
-  if (req.path.startsWith('/api/memory/')) return next();
 
+// ── BASIC AUTH ───────────────────────────────────────────────
+app.use((req, res, next) => {
+  if (req.method === 'POST' && req.path === '/api/report') return next();
+  if (req.path.startsWith('/api/memory/')) return next();
   const auth = req.headers['authorization'];
   if (!auth || !auth.startsWith('Basic ')) {
     res.set('WWW-Authenticate', 'Basic realm="Signal Dashboard"');
@@ -19,196 +17,273 @@ app.use((req, res, next) => {
   }
   const credentials = Buffer.from(auth.split(' ')[1], 'base64').toString();
   const [user, pass] = credentials.split(':');
-  if (user === process.env.DASH_USER && pass === process.env.DASH_PASS) {
-    return next();
-  }
+  if (user === process.env.DASH_USER && pass === process.env.DASH_PASS) return next();
   res.set('WWW-Authenticate', 'Basic realm="Signal Dashboard"');
   return res.status(401).send('Invalid credentials');
 });
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.text({ limit: '10mb', type: '*/*' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const db = new Database('./reports.db');
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS reports (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    client TEXT NOT NULL,
-    report_text TEXT NOT NULL,
-    status TEXT DEFAULT 'auto',
-    score TEXT DEFAULT 'GREEN',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  CREATE TABLE IF NOT EXISTS context_messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    report_id INTEGER NOT NULL,
-    message TEXT NOT NULL,
-    is_action INTEGER DEFAULT 0,
-    done INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (report_id) REFERENCES reports(id)
-  );
-  CREATE TABLE IF NOT EXISTS status_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    report_id INTEGER NOT NULL,
-    from_status TEXT,
-    to_status TEXT,
-    reason TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (report_id) REFERENCES reports(id)
-  );
-`);
-
-// Migrations — safe to run every time
-try { db.exec(`ALTER TABLE reports ADD COLUMN status TEXT DEFAULT 'auto'`); } catch(e) {}
-try { db.exec(`ALTER TABLE reports ADD COLUMN score TEXT DEFAULT 'GREEN'`); } catch(e) {}
-try { db.exec(`ALTER TABLE context_messages ADD COLUMN is_action INTEGER DEFAULT 0`); } catch(e) {}
-try { db.exec(`ALTER TABLE context_messages ADD COLUMN done INTEGER DEFAULT 0`); } catch(e) {}
-
-// POST /api/report — receives report from Make, extracts score from text
-app.post('/api/report', (req, res) => {
-  let client, report_text;
-  if (typeof req.body === 'string') {
-    client = req.headers['x-client-name'] || 'Unknown';
-    report_text = req.body;
-  } else {
-    client = req.body.client;
-    report_text = req.body.report_text;
-  }
-  if (!client || !report_text) return res.status(400).json({ error: 'Missing fields' });
-  try { report_text = decodeURIComponent(report_text); } catch(e) {}
-  report_text = report_text.replace(/\\n/g, '\n');
-
-  // Extract SIGNAL_SCORE from report text then strip it out
-  let score = 'AMBER';
-  const scoreMatch = report_text.match(/^SIGNAL_SCORE:\s*(RED|AMBER|GREEN)\s*\n?/m);
-  if (scoreMatch) {
-    score = scoreMatch[1];
-    report_text = report_text.replace(/^SIGNAL_SCORE:\s*(RED|AMBER|GREEN)\s*\n?/m, '').trim();
-  }
-
-  const result = db.prepare(
-    'INSERT INTO reports (client, report_text, status, score) VALUES (?, ?, ?, ?)'
-  ).run(client, report_text, 'auto', score);
-
-  res.json({ id: result.lastInsertRowid });
+// ── POSTGRES ─────────────────────────────────────────────────
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('railway')
+    ? { rejectUnauthorized: false }
+    : false
 });
 
-// GET /api/reports — latest report per client, sorted RED > AMBER > GREEN > actioned
-app.get('/api/reports', (req, res) => {
-  const reports = db.prepare(`
-    SELECT r.*
-    FROM reports r
-    INNER JOIN (
-      SELECT client, MAX(created_at) as max_created
+// ── MIGRATIONS ───────────────────────────────────────────────
+async function migrate() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS reports (
+        id SERIAL PRIMARY KEY,
+        client TEXT NOT NULL,
+        report_text TEXT NOT NULL,
+        status TEXT DEFAULT 'auto',
+        score TEXT DEFAULT 'AMBER',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS context_messages (
+        id SERIAL PRIMARY KEY,
+        report_id INTEGER NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+        message TEXT NOT NULL,
+        is_action INTEGER DEFAULT 0,
+        done INTEGER DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS status_history (
+        id SERIAL PRIMARY KEY,
+        report_id INTEGER NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+        from_status TEXT,
+        to_status TEXT,
+        reason TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    console.log('Database migrations complete');
+  } catch(e) {
+    console.error('Migration error:', e.message);
+  } finally {
+    client.release();
+  }
+}
+
+// ── ROUTES ───────────────────────────────────────────────────
+
+// POST /api/report
+app.post('/api/report', async (req, res) => {
+  try {
+    let client, report_text;
+    if (typeof req.body === 'string') {
+      client = req.headers['x-client-name'] || 'Unknown';
+      report_text = req.body;
+    } else {
+      client = req.body.client;
+      report_text = req.body.report_text;
+    }
+    if (!client || !report_text) return res.status(400).json({ error: 'Missing fields' });
+
+    try { report_text = decodeURIComponent(report_text); } catch(e) {}
+    report_text = report_text.replace(/\\n/g, '\n');
+
+    let score = 'AMBER';
+    const scoreMatch = report_text.match(/^SIGNAL_SCORE:\s*(RED|AMBER|GREEN)\s*\n?/m);
+    if (scoreMatch) {
+      score = scoreMatch[1];
+      report_text = report_text.replace(/^SIGNAL_SCORE:\s*(RED|AMBER|GREEN)\s*\n?/m, '').trim();
+    }
+
+    const result = await pool.query(
+      'INSERT INTO reports (client, report_text, status, score) VALUES ($1, $2, $3, $4) RETURNING id',
+      [client, report_text, 'auto', score]
+    );
+    res.json({ id: result.rows[0].id });
+  } catch(e) {
+    console.error('POST /api/report error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/reports — latest per client, sorted RED > AMBER > GREEN > actioned
+app.get('/api/reports', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT DISTINCT ON (client) *
       FROM reports
-      GROUP BY client
-    ) latest ON r.client = latest.client AND r.created_at = latest.max_created
-    ORDER BY
-      CASE r.status WHEN 'actioned' THEN 1 ELSE 0 END,
-      CASE r.score WHEN 'RED' THEN 0 WHEN 'AMBER' THEN 1 WHEN 'GREEN' THEN 2 ELSE 3 END,
-      r.created_at DESC
-  `).all();
-  res.json(reports);
+      ORDER BY client, created_at DESC
+    `);
+
+    // Sort: actioned last, then by score
+    const scoreOrder = { RED: 0, AMBER: 1, GREEN: 2 };
+    const sorted = result.rows.sort((a, b) => {
+      if (a.status === 'actioned' && b.status !== 'actioned') return 1;
+      if (b.status === 'actioned' && a.status !== 'actioned') return -1;
+      return (scoreOrder[a.score] ?? 1) - (scoreOrder[b.score] ?? 1);
+    });
+
+    res.json(sorted);
+  } catch(e) {
+    console.error('GET /api/reports error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // GET /api/reports/:client — all reports for a client
-app.get('/api/reports/:client', (req, res) => {
-  const reports = db.prepare(`
-    SELECT r.*, (SELECT COUNT(*) FROM context_messages WHERE report_id = r.id) as reply_count
-    FROM reports r WHERE client = ? ORDER BY created_at DESC LIMIT 50
-  `).all(req.params.client);
-  res.json(reports);
+app.get('/api/reports/:client', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT r.*, 
+        (SELECT COUNT(*) FROM context_messages WHERE report_id = r.id) as reply_count
+      FROM reports r
+      WHERE client = $1
+      ORDER BY created_at DESC
+      LIMIT 50
+    `, [req.params.client]);
+    res.json(result.rows);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// GET /api/report/:id — single report with messages and history
-app.get('/api/report/:id', (req, res) => {
-  const report = db.prepare('SELECT * FROM reports WHERE id = ?').get(req.params.id);
-  if (!report) return res.status(404).json({ error: 'Not found' });
-  const messages = db.prepare('SELECT * FROM context_messages WHERE report_id = ? ORDER BY created_at ASC').all(req.params.id);
-  const history = db.prepare('SELECT * FROM status_history WHERE report_id = ? ORDER BY created_at ASC').all(req.params.id);
-  res.json({ ...report, messages, history });
+// GET /api/report/:id
+app.get('/api/report/:id', async (req, res) => {
+  try {
+    const report = await pool.query('SELECT * FROM reports WHERE id = $1', [req.params.id]);
+    if (!report.rows.length) return res.status(404).json({ error: 'Not found' });
+    const messages = await pool.query('SELECT * FROM context_messages WHERE report_id = $1 ORDER BY created_at ASC', [req.params.id]);
+    const history = await pool.query('SELECT * FROM status_history WHERE report_id = $1 ORDER BY created_at ASC', [req.params.id]);
+    res.json({ ...report.rows[0], messages: messages.rows, history: history.rows });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // DELETE /api/report/:id
-app.delete('/api/report/:id', (req, res) => {
-  db.prepare('DELETE FROM context_messages WHERE report_id = ?').run(req.params.id);
-  db.prepare('DELETE FROM status_history WHERE report_id = ?').run(req.params.id);
-  db.prepare('DELETE FROM reports WHERE id = ?').run(req.params.id);
-  res.json({ ok: true });
+app.delete('/api/report/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM reports WHERE id = $1', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// POST /api/context — add a note
-app.post('/api/context', (req, res) => {
-  const { report_id, message, is_action } = req.body;
-  if (!report_id || !message) return res.status(400).json({ error: 'Missing fields' });
-  const result = db.prepare(
-    'INSERT INTO context_messages (report_id, message, is_action) VALUES (?, ?, ?)'
-  ).run(report_id, message, is_action ? 1 : 0);
-  const report = db.prepare('SELECT * FROM reports WHERE id = ?').get(report_id);
-  if (report && report.status === 'auto') {
-    db.prepare('UPDATE reports SET status = ? WHERE id = ?').run('actioned', report_id);
-    db.prepare('INSERT INTO status_history (report_id, from_status, to_status, reason) VALUES (?, ?, ?, ?)').run(report_id, 'auto', 'actioned', message);
+// POST /api/context
+app.post('/api/context', async (req, res) => {
+  try {
+    const { report_id, message, is_action } = req.body;
+    if (!report_id || !message) return res.status(400).json({ error: 'Missing fields' });
+
+    const result = await pool.query(
+      'INSERT INTO context_messages (report_id, message, is_action) VALUES ($1, $2, $3) RETURNING id',
+      [report_id, message, is_action ? 1 : 0]
+    );
+
+    const report = await pool.query('SELECT * FROM reports WHERE id = $1', [report_id]);
+    if (report.rows.length && report.rows[0].status === 'auto') {
+      await pool.query('UPDATE reports SET status = $1 WHERE id = $2', ['actioned', report_id]);
+      await pool.query(
+        'INSERT INTO status_history (report_id, from_status, to_status, reason) VALUES ($1, $2, $3, $4)',
+        [report_id, 'auto', 'actioned', message]
+      );
+    }
+
+    res.json({ id: result.rows[0].id });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
   }
-  res.json({ id: result.lastInsertRowid });
 });
 
 // DELETE /api/context/:id
-app.delete('/api/context/:id', (req, res) => {
-  db.prepare('DELETE FROM context_messages WHERE id = ?').run(req.params.id);
-  res.json({ ok: true });
+app.delete('/api/context/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM context_messages WHERE id = $1', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// PATCH /api/context/:id/done — toggle note done
-app.patch('/api/context/:id/done', (req, res) => {
-  const msg = db.prepare('SELECT * FROM context_messages WHERE id = ?').get(req.params.id);
-  if (!msg) return res.status(404).json({ error: 'Not found' });
-  const newDone = msg.done ? 0 : 1;
-  db.prepare('UPDATE context_messages SET done = ? WHERE id = ?').run(newDone, msg.id);
-  res.json({ done: newDone });
+// PATCH /api/context/:id/done
+app.patch('/api/context/:id/done', async (req, res) => {
+  try {
+    const msg = await pool.query('SELECT * FROM context_messages WHERE id = $1', [req.params.id]);
+    if (!msg.rows.length) return res.status(404).json({ error: 'Not found' });
+    const newDone = msg.rows[0].done ? 0 : 1;
+    await pool.query('UPDATE context_messages SET done = $1 WHERE id = $2', [newDone, req.params.id]);
+    res.json({ done: newDone });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// PATCH /api/report/:id/status — update status
-app.patch('/api/report/:id/status', (req, res) => {
-  const { status, reason } = req.body;
-  const report = db.prepare('SELECT * FROM reports WHERE id = ?').get(req.params.id);
-  if (!report) return res.status(404).json({ error: 'Not found' });
-  db.prepare('UPDATE reports SET status = ? WHERE id = ?').run(status, req.params.id);
-  db.prepare('INSERT INTO status_history (report_id, from_status, to_status, reason) VALUES (?, ?, ?, ?)').run(req.params.id, report.status, status, reason || '');
-  res.json({ ok: true });
+// PATCH /api/report/:id/status
+app.patch('/api/report/:id/status', async (req, res) => {
+  try {
+    const { status, reason } = req.body;
+    const report = await pool.query('SELECT * FROM reports WHERE id = $1', [req.params.id]);
+    if (!report.rows.length) return res.status(404).json({ error: 'Not found' });
+    await pool.query('UPDATE reports SET status = $1 WHERE id = $2', [status, req.params.id]);
+    await pool.query(
+      'INSERT INTO status_history (report_id, from_status, to_status, reason) VALUES ($1, $2, $3, $4)',
+      [req.params.id, report.rows[0].status, status, reason || '']
+    );
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// GET /api/clients — distinct client list
-app.get('/api/clients', (req, res) => {
-  const clients = db.prepare('SELECT DISTINCT client FROM reports ORDER BY client').all();
-  res.json(clients.map(r => r.client));
+// GET /api/clients
+app.get('/api/clients', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT DISTINCT client FROM reports ORDER BY client');
+    res.json(result.rows.map(r => r.client));
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// GET /api/memory/:client
+app.get('/api/memory/:client', async (req, res) => {
+  try {
+    const client = decodeURIComponent(req.params.client);
+    const reports = await pool.query(`
+      SELECT id, report_text, created_at, status, score
+      FROM reports WHERE client = $1
+      ORDER BY created_at DESC LIMIT 4
+    `, [client]);
 
-// GET /api/memory/:client — last 4 reports + notes for Claude context
-app.get('/api/memory/:client', (req, res) => {
-  const client = decodeURIComponent(req.params.client);
-  const reports = db.prepare(`
-    SELECT r.id, r.report_text, r.created_at, r.status, r.score
-    FROM reports r WHERE r.client = ?
-    ORDER BY r.created_at DESC LIMIT 4
-  `).all(client);
-
-  let text = '';
-  reports.forEach((r, i) => {
-    const d = new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-    const notes = db.prepare('SELECT message, done FROM context_messages WHERE report_id = ? ORDER BY created_at ASC').all(r.id);
-    text += `--- Previous Report ${i + 1}: ${d} (Score: ${r.score || 'AMBER'}) ---\n`;
-    text += r.report_text.substring(0, 600) + '...\n';
-    if (notes.length) {
-      text += `Account manager notes:\n`;
-      notes.forEach(n => { text += `- ${n.done ? '[RESOLVED] ' : ''}${n.message}\n`; });
+    let text = '';
+    for (const r of reports.rows) {
+      const d = new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+      const notes = await pool.query(
+        'SELECT message, done FROM context_messages WHERE report_id = $1 ORDER BY created_at ASC',
+        [r.id]
+      );
+      text += `--- Previous Report: ${d} (Score: ${r.score || 'AMBER'}) ---\n`;
+      text += r.report_text.substring(0, 600) + '...\n';
+      if (notes.rows.length) {
+        text += `Account manager notes:\n`;
+        notes.rows.forEach(n => { text += `- ${n.done ? '[RESOLVED] ' : ''}${n.message}\n`; });
+      }
+      text += '\n';
     }
-    text += '\n';
-  });
 
-  res.json({ text: text || 'No previous reports available.' });
+    res.json({ text: text || 'No previous reports available.' });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── START ────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
+migrate().then(() => {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 });
